@@ -40,6 +40,9 @@ import os
 # ----------------------- Bot Config -----------------------
 HP_RECT = (196, 36, 680, 1)
 MANA_RECT = (884, 36, 680, 1)
+HP_RECT_SIO = (35, 88, 129, 1)
+MANA_RECT_SIO = (35, 94, 129, 1)
+
 PROFILE_FILE = "profiles.json"
 WINDOW_NAME = "Tibia - ProfilName"  # Will be replaced dynamically with profile name
 # Określ datę, do której aplikacja ma działać (w formacie timestamp)
@@ -688,23 +691,39 @@ class BotUI:
                 )
             )
 
-    def use_heals(self, hwnd, hp, mana):
+    def use_heals(self, hwnd, hp, mana, window_name):
         heals = self.get_sorted_heals()  # Pobierz posortowane czary leczenia
         now = time.time()
 
         # Sprawdzamy, czy minął czas GCD przed użyciem jakiegokolwiek czaru leczenia
         if now - self.last_Heal_GCD < Heal_GCD:
             return  # Jeśli nie minął wymagany czas GCD, nie wykonuj żadnej akcji
+        
+        for heal in heals:
+             if "sio" in heal["name"].lower():  # Sprawdzamy, czy "sio" jest w nazwie czaru (ignorując wielkość liter)
+                 hp_Sio, mana_Sio = read_hp_mana(window_name, HP_RECT_SIO, MANA_RECT_SIO)
 
         for heal in heals:
-            if hp <= heal["hp%"]:  # Sprawdzamy, czy HP jest niższe niż wymagane
-                if mana >= heal["mana_cost"]:  # Sprawdzamy, czy mamy wystarczającą ilość many
-                    if now - heal["last_used"] > heal["cd"]:  # Sprawdzamy cooldown
-                        send_key(hwnd, heal["key"])
-                        self._set_heal_last_used_by_key(heal["key"], now)  # Zapisz czas użycia
-                        self.last_Heal_GCD = now  # Zapisz czas GCD
-                        print(f"Użyto czaru leczenia: {heal['key']}")
-                        break          
+            if not "sio" in heal["name"].lower():
+                if hp <= heal["hp%"]:    # Sprawdzamy, czy HP jest niższe niż wymagane i ignorujemy siohy
+                    if mana >= heal["mana_cost"]:  # Sprawdzamy, czy mamy wystarczającą ilość many
+                        if now - heal["last_used"] > heal["cd"]:  # Sprawdzamy cooldown
+                            send_key(hwnd, heal["key"])
+                            self._set_heal_last_used_by_key(heal["key"], now)  # Zapisz czas użycia
+                            self.last_Heal_GCD = now  # Zapisz czas GCD
+                            print(f"Użyto czaru leczenia: {heal['key']}")
+                            break
+        for heal in heals:
+             if "sio" in heal["name"].lower():
+                if hp_Sio <= heal["hp%"]:    # Sprawdzamy, czy HP jest niższe niż wymagane i ignorujemy siohy
+                    if mana >= heal["mana_cost"]:  # Sprawdzamy, czy mamy wystarczającą ilość many
+                        if now - heal["last_used"] > heal["cd"]:  # Sprawdzamy cooldown
+                            send_key(hwnd, heal["key"])
+                            self._set_heal_last_used_by_key(heal["key"], now)  # Zapisz czas użycia
+                            self.last_Heal_GCD = now  # Zapisz czas GCD
+                            print(f"Użyto czaru leczenia: {heal['key']}")
+                            break
+                    
 
     def get_sorted_heals(self):
         heals = []
@@ -1232,7 +1251,7 @@ class BotUI:
                 # Użyj potionów, jeśli wymagają tego warunki
                 self.use_potions(hwnd, hp, mana)
                 # Używamy healingów
-                self.use_heals(hwnd, hp, mana)  # Wywołanie funkcji use_heals
+                self.use_heals(hwnd, hp, mana, window_name)  # Wywołanie funkcji use_heals
                 if self.rotation_enabled:
                     # Używamy ofensywnych zaklęć
                     self.use_offensive_rotation(hwnd, mana)  # Wywołanie funkcji use_offensive_rotation
