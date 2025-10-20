@@ -21,7 +21,7 @@ import os
 3. Profil niepowiazany z nickiem - mozliwe rozne rotacje
 4. Rozne rozdzielczosci - mozliwosc definiowania okna hp/mp
 5.      Aplikacja
-            pyinstaller --onefile --noconsole --icon=Scout.ico JattariaBotPROJEKT.py
+            pyinstaller --onefile --noconsole --icon=Scout.ico TeoBot.py
 6.      Licencje - ustawic date waznosci np
 7. Spelle z listy
 8. Odczyt HP/MP liczbowy
