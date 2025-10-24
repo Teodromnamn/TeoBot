@@ -46,7 +46,7 @@ MANA_RECT_SIO = (35, 94, 129, 1)
 PROFILE_FILE = "profiles.json"
 WINDOW_NAME = "Tibia - ProfilName"  # Will be replaced dynamically with profile name
 # Określ datę, do której aplikacja ma działać (w formacie timestamp)
-end_time = time.mktime((2025, 10, 25, 0, 0, 0, 0, 0, -1))  # 15 października 2025, 00:00:00
+end_time = time.mktime((2025, 11, 25, 0, 0, 0, 0, 0, -1))  
 
 Heal_GCD = 1.1
 Support_GCD = 2.1
@@ -73,7 +73,7 @@ DEFAULT_POTIONS = [
 ]
 
 DEFAULT_SUPPORT = [
-    {"name": "utura gran", "key": "F10", "cd": 60.0, "enabled": True},
+    {"name": "Auto Targeting", "key": "space", "cd": 10.0, "enabled": True},
     {"name": "utito tempo", "key": "F10", "cd": 10.0, "enabled": False},
 ]
 
@@ -86,7 +86,7 @@ UNCHECKED = "☐"
 def screenshot_window(window_name):
     hwnd = win32gui.FindWindow(None, window_name)
     if not hwnd:
-        raise Exception(f"Nie znaleziono okna: {window_name}")
+        raise Exception(f"Window not found: {window_name}")
     left, top, right, bot = win32gui.GetWindowRect(hwnd)
     width, height = right - left, bot - top
     hwndDC = win32gui.GetWindowDC(hwnd)
@@ -129,7 +129,7 @@ def read_hp_mana(window_name, hp_rect, mana_rect):
 def send_key(hwnd, key):
     WM_KEYDOWN = 0x0100
     WM_KEYUP = 0x0101
-    if key == " " or key == "spacja":
+    if key == " " or key == "spacja" or key =="space":
         vk = 0x20
     elif key == "F1":
         vk = 0x70
@@ -232,7 +232,7 @@ class ItemDialog(tk.Toplevel):
             raw = widget.get().strip()
             # required check
             if opts.get("required") and raw == "":
-                messagebox.showerror("Błąd", f"Pole '{field}' jest wymagane.")
+                messagebox.showerror("Error", f"Field '{field}' is required.")
                 return
             if raw == "":
                 out[field] = opts.get("default", "")
@@ -242,27 +242,27 @@ class ItemDialog(tk.Toplevel):
                 try:
                     v = int(raw)
                 except:
-                    messagebox.showerror("Błąd", f"Pole '{field}' musi być liczbą całkowitą.")
+                    messagebox.showerror("Error", f"Field '{field}' must be a int number.")
                     return
                 r = opts.get("range")
                 if r and not (r[0] <= v <= r[1]):
-                    messagebox.showerror("Błąd", f"'{field}' musi być w zakresie {r}.")
+                    messagebox.showerror("Error", f"'{field}' must be in range {r}.")
                     return
                 out[field] = v
             elif wtype == "spin_float":
                 try:
                     v = float(raw)
                 except:
-                    messagebox.showerror("Błąd", f"Pole '{field}' musi być liczbą.")
+                    messagebox.showerror("Error", f"Field '{field}' must be a number.")
                     return
                 r = opts.get("range")
                 if r and not (r[0] <= v <= r[1]):
-                    messagebox.showerror("Błąd", f"'{field}' musi być w zakresie {r}.")
+                    messagebox.showerror("Error", f"'{field}' must be in range {r}.")
                     return
                 out[field] = v
             elif wtype == "combo":
                 if opts.get("values") and raw not in opts.get("values"):
-                    messagebox.showerror("Błąd", f"'{field}' musi być jedną z {opts.get('values')}.")
+                    messagebox.showerror("Error", f"'{field}' must be one of {opts.get('values')}.")
                     return
                 out[field] = raw
             else:
@@ -332,19 +332,19 @@ class BotUI:
 
         btn_frame = ttk.Frame(frame)
         btn_frame.pack(fill="x", pady=6, padx=6)
-        ttk.Button(btn_frame, text="Nowy", command=self._new_profile).pack(side="left", padx=4)
-        ttk.Button(btn_frame, text="Zapisz", command=self._save_current_profile).pack(side="left", padx=4)
-        ttk.Button(btn_frame, text="Kopiuj", command=self._copy_profile).pack(side="left", padx=4)
-        ttk.Button(btn_frame, text="Usuń", command=self._delete_profile).pack(side="left", padx=4)
+        ttk.Button(btn_frame, text="New", command=self._new_profile).pack(side="left", padx=4)
+        ttk.Button(btn_frame, text="Save", command=self._save_current_profile).pack(side="left", padx=4)
+        ttk.Button(btn_frame, text="Copy", command=self._copy_profile).pack(side="left", padx=4)
+        ttk.Button(btn_frame, text="Delete", command=self._delete_profile).pack(side="left", padx=4)
 
         load_frame = ttk.Frame(frame)
         load_frame.pack(fill="x", pady=4, padx=6)
-        ttk.Label(load_frame, text="Wybierz profil:").pack(side="left", padx=(0,6))
+        ttk.Label(load_frame, text="Choose profile:").pack(side="left", padx=(0,6))
         self.profile_combo = ttk.Combobox(load_frame, state="readonly", width=30)
         self.profile_combo.pack(side="left")
-        ttk.Button(load_frame, text="Wczytaj", command=self._load_profile_from_combo).pack(side="left", padx=6)
+        ttk.Button(load_frame, text="Load", command=self._load_profile_from_combo).pack(side="left", padx=6)
 
-        self.current_label = ttk.Label(frame, text=f"Aktualny profil: {self.current_profile_name}")
+        self.current_label = ttk.Label(frame, text=f"Actual profil: {self.current_profile_name}")
         self.current_label.pack(anchor="w", padx=6, pady=6)
 
     def _update_profile_combo(self):
@@ -358,14 +358,14 @@ class BotUI:
             return
         self.current_profile_name = name
         self.current_profile = self.profiles[name]
-        self.current_label.config(text=f"Aktualny profil: {name}")
+        self.current_label.config(text=f"Actual profil: {name}")
         self._update_all_trees()
 
     def _new_profile(self):
-        name = simpledialog.askstring("Nowy profil", "Podaj nazwę profilu:")
+        name = simpledialog.askstring("New profil", "Choose new profil name:")
         if not name:
             return
-        if name in self.profiles and not messagebox.askyesno("Zastąpić?", "Profil już istnieje. Nadpisać?"):
+        if name in self.profiles and not messagebox.askyesno("Overwrite?", "Profil already exist. Do u want to overwrite it?"):
             return
         self.profiles[name] = {"offensive": [], "healing": [], "potions": [], "support": []}
         self._update_profile_combo()
@@ -373,7 +373,7 @@ class BotUI:
 
     def _save_current_profile(self):
         if not self.current_profile_name:
-            messagebox.showwarning("Brak profilu", "Brak aktywnego profilu do zapisu.")
+            messagebox.showwarning("Profil missing", "There is no current profil.")
             return
         # collect from trees
         self.profiles[self.current_profile_name] = {
@@ -386,7 +386,7 @@ class BotUI:
         try:
             with open(PROFILE_FILE, "w", encoding="utf-8") as f:
                 json.dump(self.profiles, f, indent=2, ensure_ascii=False)
-            messagebox.showinfo("Zapisano", f"Profil '{self.current_profile_name}' zapisany.")
+            messagebox.showinfo("Saved", f"Profil '{self.current_profile_name}' saved.")
             self._update_profile_combo()
         except Exception as e:
             messagebox.showerror("Błąd zapisu", str(e))
@@ -394,7 +394,7 @@ class BotUI:
     def _copy_profile(self):
         if not self.current_profile_name:
             return
-        name = simpledialog.askstring("Kopiuj profil", "Podaj nazwę nowego profilu:")
+        name = simpledialog.askstring("Copy profil", "New profile name:")
         if not name:
             return
         # deep copy
@@ -405,7 +405,7 @@ class BotUI:
     def _delete_profile(self):
         if not self.current_profile_name:
             return
-        if not messagebox.askyesno("Usuń", f"Czy na pewno usunąć profil '{self.current_profile_name}'?"):
+        if not messagebox.askyesno("Delete", f"Are you sure you want to delete the profile '{self.current_profile_name}'?"):
             return
         self.profiles.pop(self.current_profile_name, None)
         # save
@@ -437,7 +437,7 @@ class BotUI:
     # ---------- Offensive tab ----------
     def _create_offensive_tab(self):
         frame = ttk.Frame(self.notebook)
-        self.notebook.add(frame, text="Ofensywa")
+        self.notebook.add(frame, text="Offensive")
 
         # Dodajemy ukrytą kolumnę "_last_used" jako ostatnia kolumnę
         cols = ("name", "key", "priority", "mana_cost", "cd", "type", "_last_used")
@@ -456,9 +456,9 @@ class BotUI:
 
         btnf = ttk.Frame(frame)
         btnf.pack(fill="x", padx=6, pady=(0,6))
-        ttk.Button(btnf, text="Dodaj", command=self._add_off).pack(side="left", padx=3)
-        ttk.Button(btnf, text="Edytuj", command=self._edit_off).pack(side="left", padx=3)
-        ttk.Button(btnf, text="Usuń", command=lambda: self._remove_selected(self.off_tree)).pack(side="left", padx=3)
+        ttk.Button(btnf, text="Add", command=self._add_off).pack(side="left", padx=3)
+        ttk.Button(btnf, text="Edit", command=self._edit_off).pack(side="left", padx=3)
+        ttk.Button(btnf, text="Del", command=lambda: self._remove_selected(self.off_tree)).pack(side="left", padx=3)
 
     def _add_off(self):
         schema = [
@@ -469,7 +469,7 @@ class BotUI:
             ("cd", "spin_float", {"required": True, "default": 1.0, "range": (0.0, 9999.0)}),
             ("type", "combo", {"required": True, "values": ["spell", "rune"], "default": "spell"}),
         ]
-        dlg = ItemDialog(self.root, "Dodaj offensive", schema)
+        dlg = ItemDialog(self.root, "Add", schema)
         if dlg.result:
             entry = dlg.result
             self.off_tree.insert(
@@ -489,7 +489,7 @@ class BotUI:
     def _edit_off(self):
         sel = self.off_tree.selection()
         if not sel:
-            messagebox.showinfo("Edytuj", "Zaznacz wpis do edycji.")
+            messagebox.showinfo("Edit", "Select entry for editing.")
             return
         iid = sel[0]
         vals = self.off_tree.item(iid, "values")
@@ -511,7 +511,7 @@ class BotUI:
             ("cd", "spin_float", {"required": True, "default": current["cd"], "range": (0.0, 9999.0)}),
             ("type", "combo", {"required": True, "values": ["spell", "rune"], "default": current["type"]}),
         ]
-        dlg = ItemDialog(self.root, "Edytuj offensive", schema, data=current)
+        dlg = ItemDialog(self.root, "Edit", schema, data=current)
         if dlg.result:
             entry = dlg.result
             self.off_tree.item(
@@ -607,7 +607,7 @@ class BotUI:
     # ---------- Healing tab ----------
     def _create_healing_tab(self):
         frame = ttk.Frame(self.notebook)
-        self.notebook.add(frame, text="Leczenie")
+        self.notebook.add(frame, text="Healing")
 
         # Dodajemy ukrytą kolumnę "_last_used" jako ostatnia kolumnę
         cols = ("name", "key", "hp%", "mana_cost", "cd", "_last_used")
@@ -626,9 +626,9 @@ class BotUI:
 
         btnf = ttk.Frame(frame)
         btnf.pack(fill="x", padx=6, pady=(0,6))
-        ttk.Button(btnf, text="Dodaj", command=self._add_heal).pack(side="left", padx=3)
-        ttk.Button(btnf, text="Edytuj", command=self._edit_heal).pack(side="left", padx=3)
-        ttk.Button(btnf, text="Usuń", command=lambda: self._remove_selected(self.heal_tree)).pack(side="left", padx=3)
+        ttk.Button(btnf, text="Add", command=self._add_heal).pack(side="left", padx=3)
+        ttk.Button(btnf, text="Edit", command=self._edit_heal).pack(side="left", padx=3)
+        ttk.Button(btnf, text="Del", command=lambda: self._remove_selected(self.heal_tree)).pack(side="left", padx=3)
 
     def _add_heal(self):
         schema = [
@@ -638,7 +638,7 @@ class BotUI:
             ("mana_cost", "spin_float", {"required": True, "default": 0, "range": (0, 100)}),
             ("cd", "spin_float", {"required": True, "default": 1.0, "range": (0.0, 9999.0)}),
         ]
-        dlg = ItemDialog(self.root, "Dodaj healing", schema)
+        dlg = ItemDialog(self.root, "Add", schema)
         if dlg.result:
             e = dlg.result
             self.heal_tree.insert(
@@ -656,7 +656,7 @@ class BotUI:
     def _edit_heal(self):
         sel = self.heal_tree.selection()
         if not sel:
-            messagebox.showinfo("Edytuj", "Zaznacz wpis do edycji.")
+            messagebox.showinfo("Edit", "Select entry for editing.")
             return
         iid = sel[0]
         vals = self.heal_tree.item(iid, "values")
@@ -776,7 +776,7 @@ class BotUI:
     # ---------- Potions tab ----------
     def _create_potions_tab(self):
         frame = ttk.Frame(self.notebook)
-        self.notebook.add(frame, text="Mikstury")
+        self.notebook.add(frame, text="Potions")
 
         cols = ("type", "key", "percent", "cd", "_last_used")
         self.pot_tree = ttk.Treeview(frame, columns=cols, show="headings", height=12)
@@ -792,9 +792,9 @@ class BotUI:
 
         btnf = ttk.Frame(frame)
         btnf.pack(fill="x", padx=6, pady=(0,6))
-        ttk.Button(btnf, text="Dodaj", command=self._add_pot).pack(side="left", padx=3)
-        ttk.Button(btnf, text="Edytuj", command=self._edit_pot).pack(side="left", padx=3)
-        ttk.Button(btnf, text="Usuń", command=lambda: self._remove_selected(self.pot_tree)).pack(side="left", padx=3)
+        ttk.Button(btnf, text="Add", command=self._add_pot).pack(side="left", padx=3)
+        ttk.Button(btnf, text="Edit", command=self._edit_pot).pack(side="left", padx=3)
+        ttk.Button(btnf, text="Del", command=lambda: self._remove_selected(self.pot_tree)).pack(side="left", padx=3)
 
     def _add_pot(self):
         schema = [
@@ -803,7 +803,7 @@ class BotUI:
             ("%", "spin_float", {"required": True, "default": 50, "range": (0,100)}),
             ("cd", "spin_float", {"required": True, "default": 1.0, "range": (0.0,9999.0)}),
         ]
-        dlg = ItemDialog(self.root, "Dodaj potion", schema)
+        dlg = ItemDialog(self.root, "Add", schema)
         if dlg.result:
             e = dlg.result
             self.pot_tree.insert(
@@ -820,7 +820,7 @@ class BotUI:
     def _edit_pot(self):
         sel = self.pot_tree.selection()
         if not sel:
-            messagebox.showinfo("Edytuj", "Zaznacz wpis do edycji.")
+            messagebox.showinfo("Edit", "Select entry for editing.")
             return
         iid = sel[0]
         vals = self.pot_tree.item(iid, "values")
@@ -838,7 +838,7 @@ class BotUI:
             ("%", "spin_float", {"required": True, "default": current["%"], "range": (0, 100.0)}),
             ("cd", "spin_float", {"required": True, "default": current["cd"], "range": (0.0, 9999.0)}),
         ]
-        dlg = ItemDialog(self.root, "Edytuj potion", schema, data=current)
+        dlg = ItemDialog(self.root, "Edit", schema, data=current)
         if dlg.result:
             e = dlg.result
             self.pot_tree.item(
@@ -930,7 +930,7 @@ class BotUI:
     # ---------- Support tab ----------
     def _create_support_tab(self):
         frame = ttk.Frame(self.notebook)
-        self.notebook.add(frame, text="Wsparcie")
+        self.notebook.add(frame, text="Support")
     
         cols = ("name", "key", "cd", "enabled", "_last_used")
         self.sup_tree = ttk.Treeview(frame, columns=cols, show="headings", height=12)
@@ -946,9 +946,9 @@ class BotUI:
     
         btnf = ttk.Frame(frame)
         btnf.pack(fill="x", padx=6, pady=(0,6))
-        ttk.Button(btnf, text="Dodaj", command=self._add_sup).pack(side="left", padx=3)
-        ttk.Button(btnf, text="Edytuj", command=self._edit_sup).pack(side="left", padx=3)
-        ttk.Button(btnf, text="Usuń", command=lambda: self._remove_selected(self.sup_tree)).pack(side="left", padx=3)
+        ttk.Button(btnf, text="Add", command=self._add_sup).pack(side="left", padx=3)
+        ttk.Button(btnf, text="Edit", command=self._edit_sup).pack(side="left", padx=3)
+        ttk.Button(btnf, text="Del", command=lambda: self._remove_selected(self.sup_tree)).pack(side="left", padx=3)
 
     def _add_sup(self):
         schema = [
@@ -957,7 +957,7 @@ class BotUI:
             ("cd", "spin_float", {"required": True, "default": 1.0, "range": (0.0, 9999.0)}),
             ("enabled", "check", {"required": False, "default": True}),
         ]
-        dlg = ItemDialog(self.root, "Dodaj support", schema)
+        dlg = ItemDialog(self.root, "Add", schema)
         if dlg.result:
             e = dlg.result
             icon = CHECKED if e.get("enabled", True) else UNCHECKED
@@ -966,7 +966,7 @@ class BotUI:
     def _edit_sup(self):
         sel = self.sup_tree.selection()
         if not sel:
-            messagebox.showinfo("Edytuj", "Zaznacz wpis do edycji.")
+            messagebox.showinfo("Edit", "Select entry for editing.")
             return
         iid = sel[0]
         v = self.sup_tree.item(iid, "values")
@@ -978,7 +978,7 @@ class BotUI:
             ("cd", "spin_float", {"required": True, "default": float(v[2])}),
             ("enabled", "check", {"required": False, "default": (v[3] == CHECKED)}),
         ]
-        dlg = ItemDialog(self.root, "Edytuj support", schema)
+        dlg = ItemDialog(self.root, "Edit", schema)
         if dlg.result:
             e = dlg.result
             icon = CHECKED if e.get("enabled", True) else UNCHECKED
@@ -1182,7 +1182,7 @@ class BotUI:
         self.start_btn.pack(side="left", padx=4)
         self.stop_btn = ttk.Button(frame, text="Stop", command=self._on_stop)
         self.stop_btn.pack(side="left", padx=4)
-        self.pause_btn = ttk.Button(frame, text="Wstrzymaj", command=self._on_pause)
+        self.pause_btn = ttk.Button(frame, text="Pause", command=self._on_pause)
         self.pause_btn.pack(side="left", padx=4)
         self.status_lbl = ttk.Label(frame, text="Status: Stopped")
         self.status_lbl.pack(side="right", padx=6)
@@ -1206,7 +1206,7 @@ class BotUI:
     def _start_bot(self):
         try:
             if time.time() > end_time:
-                self.status_lbl.config(text="Status: Stopped - Koniec LICENCJI")
+                self.status_lbl.config(text="Status: Stopped - End of LICENSE")
                 self.running_bot = False
                 print("Koniec ważności aplikacji!")
                 return  # Zatrzymanie procesu bota, jeśli data minęła
@@ -1221,7 +1221,7 @@ class BotUI:
             # Próbujemy znaleźć okno
             hwnd = win32gui.FindWindow(None, window_name)
             if not hwnd:
-                raise Exception(f"Nie znaleziono okna: {window_name}")
+                raise Exception(f"Window not found: {window_name}")
             
             # Jeśli okno jest dostępne, rozpocznij działanie bota
             print(f"Start bot: {profile_name}")
@@ -1263,7 +1263,7 @@ class BotUI:
                 gc.collect()
 
             except Exception as e:
-                print("Błąd:", e)
+                print("Error:", e)
                 time.sleep(0.2)
 
     def _on_stop(self):
