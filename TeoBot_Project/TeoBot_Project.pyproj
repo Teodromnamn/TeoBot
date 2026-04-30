@@ -36,7 +36,6 @@
     <Compile Include="profiles\defaults.py" />
     <Compile Include="profiles\manager.py" />
     <Compile Include="ui\app.py" />
-    <Compile Include="ui\dialogs.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="config\" />

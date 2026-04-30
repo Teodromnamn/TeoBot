@@ -20,27 +20,6 @@
       }
     ]
   },
-  "Frela": {
-    "offensive": [],
-    "healing": [
-      {
-        "name": "exura",
-        "key": "F1",
-        "hp%": 90.0,
-        "mana_cost": 0.0,
-        "cd": 1.0
-      }
-    ],
-    "potions": [
-      {
-        "type": "mana",
-        "key": "F2",
-        "%": 30.0,
-        "cd": 1.0
-      }
-    ],
-    "support": []
-  },
   "Kronos": {
     "offensive": [
       {
