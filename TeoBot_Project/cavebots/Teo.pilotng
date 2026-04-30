@@ -1,0 +1,123 @@
+{
+    "ng_backpacks": {
+        "main": "Demon Backpack",
+        "loot": "Camouflage Backpack"
+    },
+    "general_hotkeys": {
+        "shovel_hotkey": "o",
+        "rope_hotkey": "p"
+    },
+    "auto_hur": {
+        "enabled": true,
+        "hotkey": "4",
+        "spell": "utani hur",
+        "pz": false
+    },
+    "alert": {
+        "enabled": false,
+        "cave": false,
+        "sayPlayer": false
+    },
+    "clear_stats": {
+        "poison": true,
+        "poison_hotkey": "0"
+    },
+    "ng_comboSpells": {
+        "enabled": false,
+        "lastUsedSpell": null,
+        "lastUsedSpellAt": null,
+        "items": []
+    },
+    "healing": {
+        "highPriority": {
+            "healthFood": {
+                "enabled": false,
+                "hotkey": "F12",
+                "hpPercentageLessThanOrEqual": 0
+            },
+            "manaFood": {
+                "enabled": false,
+                "hotkey": "4",
+                "manaPercentageLessThanOrEqual": 0
+            },
+            "swapRing": {
+                "enabled": false,
+                "tankRing": {
+                    "hotkey": "F11",
+                    "hpPercentageLessThanOrEqual": 98,
+                    "slot": 21
+                },
+                "mainRing": {
+                    "hotkey": "F12",
+                    "hpPercentageGreaterThan": 99,
+                    "slot": 22
+                },
+                "tankRingAlwaysEquipped": false
+            },
+            "swapAmulet": {
+                "enabled": false,
+                "tankAmulet": {
+                    "hotkey": "u",
+                    "hpPercentageLessThanOrEqual": 98,
+                    "slot": 14
+                },
+                "mainAmulet": {
+                    "hotkey": "i",
+                    "hpPercentageGreaterThan": 99,
+                    "slot": 14
+                },
+                "tankAmuletAlwaysEquipped": false
+            }
+        },
+        "potions": {
+            "firstHealthPotion": {
+                "enabled": true,
+                "hotkey": "1",
+                "slot": 1,
+                "hpPercentageLessThanOrEqual": 50,
+                "manaPercentageGreaterThanOrEqual": 0
+            },
+            "firstManaPotion": {
+                "enabled": true,
+                "hotkey": "2",
+                "slot": 2,
+                "manaPercentageLessThanOrEqual": 80
+            }
+        },
+        "spells": {
+            "criticalHealing": {
+                "enabled": true,
+                "hotkey": "6",
+                "hpPercentageLessThanOrEqual": 20,
+                "manaPercentageGreaterThanOrEqual": 8,
+                "spell": "exura gran ico"
+            },
+            "lightHealing": {
+                "enabled": true,
+                "hotkey": "5",
+                "hpPercentageLessThanOrEqual": 90,
+                "manaPercentageGreaterThanOrEqual": 4,
+                "spell": "exura med ico"
+            },
+            "utura": {
+                "enabled": false,
+                "hotkey": "7",
+                "hpPercentageLessThanOrEqual": 0,
+                "manaPercentageGreaterThanOrEqual": 0,
+                "spell": null
+            },
+            "uturaGran": {
+                "enabled": true,
+                "hotkey": "8",
+                "hpPercentageLessThanOrEqual": 99,
+                "manaPercentageGreaterThanOrEqual": 4,
+                "spell": null
+            }
+        },
+        "eatFood": {
+            "enabled": true,
+            "hotkey": "f",
+            "eatWhenFoodIslessOrEqual": 0
+        }
+    }
+}

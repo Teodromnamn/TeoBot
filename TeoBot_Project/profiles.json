@@ -1,0 +1,305 @@
+{
+  "Default": {
+    "offensive": [],
+    "healing": [
+      {
+        "name": "exura",
+        "key": "F1",
+        "hp%": 85.0,
+        "mana_cost": 0.0,
+        "cd": 1.0
+      }
+    ],
+    "potions": [],
+    "support": [
+      {
+        "name": "Targeting",
+        "key": "spacja",
+        "cd": 5.0,
+        "enabled": true
+      }
+    ]
+  },
+  "Frela": {
+    "offensive": [],
+    "healing": [
+      {
+        "name": "exura",
+        "key": "F1",
+        "hp%": 90.0,
+        "mana_cost": 0.0,
+        "cd": 1.0
+      }
+    ],
+    "potions": [
+      {
+        "type": "mana",
+        "key": "F2",
+        "%": 30.0,
+        "cd": 1.0
+      }
+    ],
+    "support": []
+  },
+  "Kronos": {
+    "offensive": [
+      {
+        "name": "amp",
+        "key": "F5",
+        "priority": 1,
+        "mana_cost": 0.0,
+        "cd": 1.0,
+        "type": "spell"
+      },
+      {
+        "name": "gran",
+        "key": "F6",
+        "priority": 2,
+        "mana_cost": 0.0,
+        "cd": 1.0,
+        "type": "spell"
+      },
+      {
+        "name": "anihil",
+        "key": "F7",
+        "priority": 3,
+        "mana_cost": 0.0,
+        "cd": 1.0,
+        "type": "spell"
+      },
+      {
+        "name": "exori",
+        "key": "F8",
+        "priority": 4,
+        "mana_cost": 0.0,
+        "cd": 1.0,
+        "type": "spell"
+      },
+      {
+        "name": "exori min",
+        "key": "F9",
+        "priority": 5,
+        "mana_cost": 0.0,
+        "cd": 1.0,
+        "type": "spell"
+      }
+    ],
+    "healing": [
+      {
+        "name": "exura",
+        "key": "F1",
+        "hp%": 90.0,
+        "mana_cost": 0.0,
+        "cd": 1.0
+      },
+      {
+        "name": "utura",
+        "key": "F4",
+        "hp%": 99.0,
+        "mana_cost": 0.0,
+        "cd": 60.0
+      }
+    ],
+    "potions": [
+      {
+        "type": "mana",
+        "key": "F2",
+        "%": 85.0,
+        "cd": 1.0
+      },
+      {
+        "type": "hp",
+        "key": "F3",
+        "%": 70.0,
+        "cd": 1.0
+      }
+    ],
+    "support": [
+      {
+        "name": "utito",
+        "key": "F10",
+        "cd": 8.0,
+        "enabled": true
+      },
+      {
+        "name": "exeta",
+        "key": "F11",
+        "cd": 10.0,
+        "enabled": true
+      },
+      {
+        "name": "space",
+        "key": "space",
+        "cd": 10.0,
+        "enabled": false
+      }
+    ]
+  },
+  "Intoga": {
+    "offensive": [
+      {
+        "name": "con",
+        "key": "F5",
+        "priority": 20,
+        "mana_cost": 0.0,
+        "cd": 2.0,
+        "type": "spell"
+      }
+    ],
+    "healing": [
+      {
+        "name": "exura",
+        "key": "F1",
+        "hp%": 85.0,
+        "mana_cost": 0.0,
+        "cd": 1.0
+      },
+      {
+        "name": "utura",
+        "key": "F12",
+        "hp%": 99.0,
+        "mana_cost": 0.0,
+        "cd": 60.0
+      },
+      {
+        "name": "exura san",
+        "key": "F10",
+        "hp%": 65.0,
+        "mana_cost": 0.0,
+        "cd": 1.0
+      }
+    ],
+    "potions": [
+      {
+        "type": "mana",
+        "key": "F2",
+        "%": 30.0,
+        "cd": 1.0
+      },
+      {
+        "type": "hp",
+        "key": "F3",
+        "%": 50.0,
+        "cd": 1.0
+      }
+    ],
+    "support": [
+      {
+        "name": "Targeting",
+        "key": "spacja",
+        "cd": 20.0,
+        "enabled": false
+      }
+    ]
+  },
+  "Szuter": {
+    "offensive": [],
+    "healing": [
+      {
+        "name": "exura",
+        "key": "F1",
+        "hp%": 75.0,
+        "mana_cost": 0.0,
+        "cd": 1.0
+      }
+    ],
+    "potions": [
+      {
+        "type": "mana",
+        "key": "F2",
+        "%": 30.0,
+        "cd": 1.0
+      }
+    ],
+    "support": [
+      {
+        "name": "Targeting",
+        "key": "spacja",
+        "cd": 5.0,
+        "enabled": true
+      }
+    ]
+  },
+  "Terka": {
+    "offensive": [],
+    "healing": [
+      {
+        "name": "exura",
+        "key": "F1",
+        "hp%": 75.0,
+        "mana_cost": 0.0,
+        "cd": 1.0
+      }
+    ],
+    "potions": [
+      {
+        "type": "mana",
+        "key": "F2",
+        "%": 30.0,
+        "cd": 1.0
+      }
+    ],
+    "support": [
+      {
+        "name": "Targeting",
+        "key": "spacja",
+        "cd": 5.0,
+        "enabled": true
+      }
+    ]
+  },
+  "Sioher": {
+    "offensive": [],
+    "healing": [
+      {
+        "name": "exura gran",
+        "key": "F3",
+        "hp%": 85.0,
+        "mana_cost": 0.0,
+        "cd": 1.0
+      },
+      {
+        "name": "exura vita",
+        "key": "F1",
+        "hp%": 50.0,
+        "mana_cost": 0.0,
+        "cd": 1.0
+      },
+      {
+        "name": "sio",
+        "key": "F9",
+        "hp%": 95.0,
+        "mana_cost": 5.0,
+        "cd": 1.0
+      }
+    ],
+    "potions": [
+      {
+        "type": "mana",
+        "key": "F2",
+        "%": 50.0,
+        "cd": 1.0
+      }
+    ],
+    "support": [
+      {
+        "name": "Haste",
+        "key": "F8",
+        "cd": 21.0,
+        "enabled": true
+      }
+    ]
+  },
+  "Teo Tester": {
+    "offensive": [],
+    "healing": [],
+    "potions": [],
+    "support": []
+  },
+  "Teodromnamn": {
+    "offensive": [],
+    "healing": [],
+    "potions": [],
+    "support": []
+  }
+}

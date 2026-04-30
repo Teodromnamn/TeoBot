@@ -1,0 +1,18 @@
+pyinstaller --onefile --noconsole --icon=Scout.ico TeoBot.py
+
+pyinstaller --onefile --noconsole --noupx --icon=Scout.ico TeoBot.py
+
+pyinstaller --onedir --noconsole --noupx --icon=Scout.ico TeoBot.py
+
+pyinstaller --onefile --windowed --noupx --icon=Scout.ico TeoBot.py
+
+
+pyinstaller --icon=Scout.ico TeoBot.py
+
+pyinstaller --onefile --noconsole TeoBot.py
+
+
+
+pyinstaller --onefile --noconsole --icon=Scout.ico main.py
+
+pyinstaller --onefile --noconsole --icon=Scout.ico TeoBot_Cursr_OBS.py
