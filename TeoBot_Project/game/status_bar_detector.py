@@ -418,3 +418,22 @@ def detect_hp_mp(
         enlarged = cv2.resize(rgb, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
         enlarged_result = _run_ocr(ocr, enlarged)
         enlarged_result = [
+            item for item in enlarged_result
+            if len(item) >= 3 and float(item[2]) >= min_ocr_confidence
+        ]
+        candidates.extend(_extract_candidates(rgb, _scaled_ocr_result(enlarged_result, scale)))
+    hp_candidate, mp_candidate = _select(_deduplicate(candidates))
+
+    annotated = rgb.copy()
+    if draw_boxes:
+        for label, candidate in (("HP", hp_candidate), ("MP", mp_candidate)):
+            if candidate is None:
+                continue
+            x, y, w, h = candidate.rect
+            cv2.rectangle(annotated, (x, y), (x+w, y+h), (255, 0, 0), 2)
+            text = f"{label}: {candidate.current}/{candidate.maximum} ({candidate.percent:.1f}%)"
+            cv2.putText(annotated, text, (x, max(14, y-5)),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 0, 0), 1, cv2.LINE_AA)
+
+    return HpMpReading(_public(hp_candidate, "HP"), _public(mp_candidate, "MP"),
+                       Image.fromarray(annotated))
