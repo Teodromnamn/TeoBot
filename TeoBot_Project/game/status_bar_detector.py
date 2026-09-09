@@ -174,8 +174,6 @@ def _colour_bar_rect(
         if width > image_w*0.75 or not gy-3 <= text_cy <= gy+height+3:
             continue
 
-        # A contour often contains only the filled part.  Its numeric value
-        # tells us how far the complete frame probably continues to the right.
         estimated_width = float(width)
         # Numeric percentage does not prove where the frame ends. Some games
         # colour the empty background too, so dividing width by percentage
@@ -208,11 +206,13 @@ def _find_bar_rect(rgb: np.ndarray, text_rect: Rect, fill_ratio: float) -> Rect:
     rx1, ry1 = max(0, tx-pad_x), max(0, ty-pad_y)
     rx2, ry2 = min(image_w, tx+tw+pad_x), min(image_h, ty+th+pad_y)
     gray = cv2.cvtColor(rgb[ry1:ry2, rx1:rx2], cv2.COLOR_RGB2GRAY)
-    edges = cv2.Canny(gray, 45, 130)
+    raw_edges = cv2.Canny(gray, 45, 130)
+    edges = raw_edges.copy()
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 3))
     edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
     contours, _ = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     choices = []
+    frames = []
     for contour in contours:
         x, y, w, h = cv2.boundingRect(contour)
         gx, gy = rx1+x, ry1+y
@@ -226,6 +226,21 @@ def _find_bar_rect(rgb: np.ndarray, text_rect: Rect, fill_ratio: float) -> Rect:
             continue
         if w/max(h, 1) < 2.5 or h > th*2.8:
             continue
+        # Require evidence for all four sides of a frame, not merely the
+        # bounding box of a connected scene contour. The empty part belongs
+        # inside this frame, irrespective of the numerical fill percentage.
+        if h <= max(32, th*1.9) and w <= image_w*.75:
+            top = raw_edges[max(0, y-1):y+3, x:x+w]
+            bottom = raw_edges[max(0, y+h-3):y+h+1, x:x+w]
+            left = raw_edges[y:y+h, max(0, x-1):x+3]
+            right = raw_edges[y:y+h, max(0, x+w-3):x+w+1]
+            support = (np.any(top, axis=0).mean(), np.any(bottom, axis=0).mean(),
+                       np.any(left, axis=1).mean(), np.any(right, axis=1).mean())
+            hp_colour, mp_colour = _colour_scores(rgb, (gx, gy, w, h))
+            # A frame containing both resource colours is probably a HUD panel.
+            mixed = min(hp_colour, mp_colour) > .025
+            if min(support) >= .70 and not mixed:
+                frames.append((w*h, (gx, gy, w, h)))
         # Prefer an outline with the text-like height and a wide horizontal span.
         height_error = abs(h - th*1.15) / max(th, 1)
         width_bonus = min(w / max(tw, 1), 12.0) * 0.035
@@ -233,6 +248,16 @@ def _find_bar_rect(rgb: np.ndarray, text_rect: Rect, fill_ratio: float) -> Rect:
         choices.append((score, (gx, gy, w, h)))
     edge_rect = min(choices, key=lambda item: item[0])[1] if choices else None
     colour_rect = _colour_bar_rect(rgb, text_rect, fill_ratio)
+    if frames:
+        frame = min(frames, key=lambda item: item[0])[1]
+        # The fill/empty transition is also a vertical edge. Expand to an
+        # enclosing frame only when its top and bottom are the same rows.
+        aligned = [r for _, r in frames
+                   if abs(r[1]-frame[1]) <= 3
+                   and abs(r[1]+r[3]-frame[1]-frame[3]) <= 3
+                   and r[0] <= frame[0]+2
+                   and r[0]+r[2] >= frame[0]+frame[2]-2]
+        return max(aligned, key=lambda r: r[2])
     if colour_rect is not None:
         if edge_rect is None:
             return colour_rect
