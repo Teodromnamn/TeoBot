@@ -34,6 +34,7 @@
     <Compile Include="logic\potions.py" />
     <Compile Include="logic\support.py" />
     <Compile Include="main.py" />
+    <Compile Include="tools\test_status_bars.py" />
     <Compile Include="profiles\defaults.py" />
     <Compile Include="profiles\manager.py" />
     <Compile Include="ui\app.py" />
