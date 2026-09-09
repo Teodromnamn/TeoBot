@@ -25,6 +25,7 @@
     <Compile Include="game\consts.py" />
     <Compile Include="game\input_sender.py" />
     <Compile Include="game\map_detector.py" />
+    <Compile Include="game\status_bar_detector.py" />
     <Compile Include="game\window_capture.py" />
     <Compile Include="logic\bot_engine.py" />
     <Compile Include="logic\cavebot.py" />
