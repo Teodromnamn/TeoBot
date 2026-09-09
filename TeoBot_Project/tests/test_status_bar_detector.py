@@ -1,6 +1,24 @@
 import numpy as np
+import cv2
+import pytest
 
 from game.status_bar_detector import detect_hp_mp, _Candidate, _select, _find_bar_rect
+
+
+@pytest.mark.parametrize("fraction", [0, .1, .5, 1])
+def test_complete_frame_includes_empty_area_and_text(fraction):
+    image = np.zeros((140, 600, 3), dtype=np.uint8)
+    for y, colour in [(30, (10, 180, 20)), (75, (10, 40, 180))]:
+        image[y:y+26, 50:450] = (65, 65, 65)
+        image[y:y+26, 50:50+int(400*fraction)] = colour
+        cv2.rectangle(image, (49, y-1), (450, y+26), (200, 200, 200), 1)
+        cv2.putText(image, f"{int(100*fraction)}/100", (210, y+18),
+                    cv2.FONT_HERSHEY_SIMPLEX, .45, (255, 255, 255), 1)
+        rect = _find_bar_rect(image, (210, y+5, 60, 16), fraction)
+        assert abs(rect[0]-49) <= 3
+        assert 398 <= rect[2] <= 406
+        assert rect[1] <= y+1 and rect[1]+rect[3] >= y+25
+        assert rect[3] <= 32
 
 
 def test_overlapping_rectangles_cannot_be_selected_as_pair():
