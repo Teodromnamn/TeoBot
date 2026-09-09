@@ -149,13 +149,19 @@ def _colour_bar_rect(
     y1, y2 = max(0, ty-th), min(image_h, ty+2*th)
     hsv = cv2.cvtColor(rgb[y1:y2], cv2.COLOR_RGB2HSV)
     saturation, value = hsv[:, :, 1], hsv[:, :, 2]
-    mask = ((saturation >= 48) & (value >= 35)).astype(np.uint8) * 255
-    kernel_w = max(9, min(35, 2*th + 1))
-    mask = cv2.morphologyEx(
-        mask, cv2.MORPH_CLOSE,
-        cv2.getStructuringElement(cv2.MORPH_RECT, (kernel_w, 3)),
-    )
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    hue = hsv[:, :, 0]
+    colourful = (saturation >= 70) & (value >= 45)
+    contours = []
+    # Never connect different bar colours or vertically adjacent rows.
+    for family in ((hue <= 12) | (hue >= 172),
+                   (hue >= 35) & (hue < 88),
+                   (hue >= 88) & (hue < 130),
+                   (hue >= 130) & (hue < 172)):
+        mask = (colourful & family).astype(np.uint8) * 255
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN,
+                               np.ones((1, max(5, th)), np.uint8))
+        found, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours.extend(found)
 
     choices: list[tuple[float, Rect]] = []
     for contour in contours:
@@ -163,18 +169,17 @@ def _colour_bar_rect(
         gy = y1 + local_y
         if width < max(28, int(tw*0.40)) or height < 3:
             continue
-        if width / max(height, 1) < 2.6 or height > max(70, 3*th):
+        if width / max(height, 1) < 2.6 or height > max(30, 1.8*th):
             continue
-        if abs((gy + height/2) - text_cy) > max(10, 1.15*th):
+        if width > image_w*0.75 or not gy-3 <= text_cy <= gy+height+3:
             continue
 
         # A contour often contains only the filled part.  Its numeric value
         # tells us how far the complete frame probably continues to the right.
         estimated_width = float(width)
-        if 0.08 <= fill_ratio < 0.985:
-            extrapolated = width / fill_ratio
-            if extrapolated <= image_w*0.72:
-                estimated_width = extrapolated
+        # Numeric percentage does not prove where the frame ends. Some games
+        # colour the empty background too, so dividing width by percentage
+        # systematically overestimates the bar.
         estimated_width = min(estimated_width, image_w-x)
         right = x + estimated_width
         tolerance = max(8, 0.08*estimated_width)
@@ -235,12 +240,11 @@ def _find_bar_rect(rgb: np.ndarray, text_rect: Rect, fill_ratio: float) -> Rect:
         _, _, edge_w, _ = edge_rect
         # Merge a plausible outline with the colour span. Reject huge contours
         # that accidentally enclose two neighbouring HUD bars.
-        if 0.65*colour_w <= edge_w <= 1.85*colour_w:
-            x1 = min(colour_rect[0], edge_rect[0])
-            y1 = min(colour_rect[1], edge_rect[1])
-            x2 = max(colour_rect[0]+colour_rect[2], edge_rect[0]+edge_rect[2])
-            y2 = max(colour_rect[1]+colour_rect[3], edge_rect[1]+edge_rect[3])
-            return x1, y1, x2-x1, y2-y1
+        if (0.95*colour_w <= edge_w <= 1.15*colour_w
+                and abs(edge_rect[0]-colour_rect[0]) <= 4
+                and abs(edge_rect[1]-colour_rect[1]) <= 4
+                and edge_rect[3] <= colour_rect[3]+6):
+            return edge_rect
         return colour_rect
     if edge_rect is not None:
         return edge_rect
@@ -253,7 +257,7 @@ def _find_bar_rect(rgb: np.ndarray, text_rect: Rect, fill_ratio: float) -> Rect:
 def _colour_scores(rgb: np.ndarray, rect: Rect) -> tuple[float, float]:
     x, y, w, h = rect
     ih, iw = rgb.shape[:2]
-    mx, my = max(4, w//10), max(2, h//3)
+    mx, my = 0, 0
     roi = rgb[max(0, y-my):min(ih, y+h+my), max(0, x-mx):min(iw, x+w+mx)]
     hue, saturation, value = cv2.split(cv2.cvtColor(roi, cv2.COLOR_RGB2HSV))
     colourful = (saturation >= 70) & (value >= 45)
@@ -344,6 +348,11 @@ def _select(candidates: list[_Candidate]):
         for second in candidates[index + 1:]:
             ax, ay, aw, ah = first.rect
             bx, by, bw, bh = second.rect
+            overlap = max(0, min(ax+aw, bx+bw)-max(ax, bx)) * max(0, min(ay+ah, by+bh)-max(ay, by))
+            if overlap > 0.10*min(aw*ah, bw*bh):
+                continue
+            if max(aw, bw) > 2*min(aw, bw):
+                continue
             acx, acy = ax + aw/2, ay + ah/2
             bcx, bcy = bx + bw/2, by + bh/2
             mean_w, mean_h = max(1, (aw+bw)/2), max(1, (ah+bh)/2)
@@ -379,10 +388,9 @@ def _select(candidates: list[_Candidate]):
         return hp, mp
 
     # Last-resort fallback for a non-standard, non-paired layout.
-    hp = max(candidates, key=lambda c: c.hp_colour_score + 0.12*c.ocr_confidence)
-    remaining = [c for c in candidates if c is not hp]
-    mp = max(remaining, key=lambda c: c.mp_colour_score + 0.12*c.ocr_confidence) if remaining else None
-    return hp, mp
+    best = max(candidates, key=lambda c: max(c.hp_colour_score, c.mp_colour_score))
+    # Without a valid pair, report only one reading, never two overlapping bars.
+    return (best, None) if best.hp_colour_score > best.mp_colour_score else (None, best)
 
 
 def _public(candidate: Optional[_Candidate], kind: str) -> Optional[BarReading]:
