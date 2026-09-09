@@ -33,6 +33,8 @@ def test_detects_values_percentages_and_positions():
     assert result.hp is not None and result.mp is not None
     assert (result.hp.current, result.hp.maximum, result.hp.percent) == (750, 1000, 75.0)
     assert (result.mp.current, result.mp.maximum, result.mp.percent) == (240, 300, 80.0)
+    assert result.hp.rect[2] >= 180
+    assert result.mp.rect[2] >= 180
 
 
 def test_horizontal_green_blue_layout_and_thousands_separators():
@@ -44,3 +46,27 @@ def test_horizontal_green_blue_layout_and_thousands_separators():
     assert (result.hp.current, result.hp.maximum) == (2776, 2850)
     assert round(result.hp.percent, 2) == 97.4
     assert (result.mp.current, result.mp.maximum, result.mp.percent) == (900, 1200, 75.0)
+
+
+class MultiplePairsReader:
+    def readtext(self, image, **kwargs):
+        return [
+            ([[170, 32], [230, 32], [230, 46], [170, 46]], "900/1000", 0.98),
+            ([[170, 62], [230, 62], [230, 76], [170, 76]], "300/400", 0.98),
+            ([[485, 25], [535, 25], [535, 37], [485, 37]], "90/100", 0.99),
+            ([[485, 45], [535, 45], [535, 57], [485, 57]], "30/40", 0.99),
+        ]
+
+
+def test_selects_largest_valid_pair_instead_of_party_bars():
+    image = np.zeros((120, 650, 3), dtype=np.uint8)
+    image[25:52, 60:340] = (170, 20, 20)
+    image[55:82, 60:340] = (20, 70, 190)
+    image[20:41, 450:570] = (20, 165, 30)
+    image[42:63, 450:570] = (20, 70, 180)
+    result = detect_hp_mp(image, reader=MultiplePairsReader())
+    assert result.hp is not None and result.mp is not None
+    assert (result.hp.current, result.hp.maximum) == (900, 1000)
+    assert (result.mp.current, result.mp.maximum) == (300, 400)
+    assert result.hp.rect[2] > 200
+    assert result.mp.rect[2] > 200
