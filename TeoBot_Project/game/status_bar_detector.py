@@ -139,7 +139,60 @@ def _join_ocr_parts(parts: list[tuple]) -> list[tuple]:
     return output
 
 
-def _find_bar_rect(rgb: np.ndarray, text_rect: Rect) -> Rect:
+def _colour_bar_rect(
+    rgb: np.ndarray, text_rect: Rect, fill_ratio: float
+) -> Optional[Rect]:
+    """Recover the long coloured bar even when OCR found only its text."""
+    image_h, image_w = rgb.shape[:2]
+    tx, ty, tw, th = text_rect
+    text_cx, text_cy = tx + tw / 2, ty + th / 2
+    y1, y2 = max(0, ty-th), min(image_h, ty+2*th)
+    hsv = cv2.cvtColor(rgb[y1:y2], cv2.COLOR_RGB2HSV)
+    saturation, value = hsv[:, :, 1], hsv[:, :, 2]
+    mask = ((saturation >= 48) & (value >= 35)).astype(np.uint8) * 255
+    kernel_w = max(9, min(35, 2*th + 1))
+    mask = cv2.morphologyEx(
+        mask, cv2.MORPH_CLOSE,
+        cv2.getStructuringElement(cv2.MORPH_RECT, (kernel_w, 3)),
+    )
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    choices: list[tuple[float, Rect]] = []
+    for contour in contours:
+        x, local_y, width, height = cv2.boundingRect(contour)
+        gy = y1 + local_y
+        if width < max(28, int(tw*0.40)) or height < 3:
+            continue
+        if width / max(height, 1) < 2.6 or height > max(70, 3*th):
+            continue
+        if abs((gy + height/2) - text_cy) > max(10, 1.15*th):
+            continue
+
+        # A contour often contains only the filled part.  Its numeric value
+        # tells us how far the complete frame probably continues to the right.
+        estimated_width = float(width)
+        if 0.08 <= fill_ratio < 0.985:
+            extrapolated = width / fill_ratio
+            if extrapolated <= image_w*0.72:
+                estimated_width = extrapolated
+        estimated_width = min(estimated_width, image_w-x)
+        right = x + estimated_width
+        tolerance = max(8, 0.08*estimated_width)
+        if not (x-tolerance <= text_cx <= right+tolerance):
+            continue
+
+        rect_y = min(gy, max(0, ty-2))
+        rect_bottom = max(gy+height, min(image_h, ty+th+2))
+        rect = (x, rect_y, max(1, int(round(estimated_width))), rect_bottom-rect_y)
+        centre_error = abs((x + estimated_width/2) - text_cx) / max(estimated_width, 1)
+        y_error = abs((gy + height/2) - text_cy) / max(th, 1)
+        # Width is useful as a tie-breaker, but alignment with OCR remains key.
+        score = centre_error + 0.30*y_error - 0.025*np.log1p(width)
+        choices.append((score, rect))
+    return min(choices, key=lambda item: item[0])[1] if choices else None
+
+
+def _find_bar_rect(rgb: np.ndarray, text_rect: Rect, fill_ratio: float) -> Rect:
     """Find a rectangular outline around the OCR text, with safe fallback."""
     image_h, image_w = rgb.shape[:2]
     tx, ty, tw, th = text_rect
@@ -173,8 +226,24 @@ def _find_bar_rect(rgb: np.ndarray, text_rect: Rect) -> Rect:
         width_bonus = min(w / max(tw, 1), 12.0) * 0.035
         score = height_error - width_bonus
         choices.append((score, (gx, gy, w, h)))
-    if choices:
-        return min(choices, key=lambda item: item[0])[1]
+    edge_rect = min(choices, key=lambda item: item[0])[1] if choices else None
+    colour_rect = _colour_bar_rect(rgb, text_rect, fill_ratio)
+    if colour_rect is not None:
+        if edge_rect is None:
+            return colour_rect
+        _, _, colour_w, _ = colour_rect
+        _, _, edge_w, _ = edge_rect
+        # Merge a plausible outline with the colour span. Reject huge contours
+        # that accidentally enclose two neighbouring HUD bars.
+        if 0.65*colour_w <= edge_w <= 1.85*colour_w:
+            x1 = min(colour_rect[0], edge_rect[0])
+            y1 = min(colour_rect[1], edge_rect[1])
+            x2 = max(colour_rect[0]+colour_rect[2], edge_rect[0]+edge_rect[2])
+            y2 = max(colour_rect[1]+colour_rect[3], edge_rect[1]+edge_rect[3])
+            return x1, y1, x2-x1, y2-y1
+        return colour_rect
+    if edge_rect is not None:
+        return edge_rect
     mx, my = max(8, tw//4), max(3, th//3)
     x1, y1 = max(0, tx-mx), max(0, ty-my)
     x2, y2 = min(image_w, tx+tw+mx), min(image_h, ty+th+my)
@@ -217,11 +286,54 @@ def _extract_candidates(rgb: np.ndarray, ocr_result: Sequence) -> list[_Candidat
         if key in seen:
             continue
         seen.add(key)
-        rect = _find_bar_rect(rgb, text_rect)
+        rect = _find_bar_rect(rgb, text_rect, current/maximum)
         red, blue = _colour_scores(rgb, rect)
         candidates.append(_Candidate(current, maximum, raw_text, confidence,
                                      text_rect, rect, red, blue))
     return candidates
+
+
+def _scaled_ocr_result(result: Sequence, scale: float) -> list[tuple]:
+    scaled = []
+    for item in result:
+        if len(item) < 3:
+            continue
+        points, text, confidence = item[:3]
+        points = (np.asarray(points, dtype=np.float32) / scale).tolist()
+        scaled.append((points, text, confidence))
+    return scaled
+
+
+def _deduplicate(candidates: list[_Candidate]) -> list[_Candidate]:
+    """Remove the same number read in both normal and enlarged OCR passes."""
+    output: list[_Candidate] = []
+    for candidate in sorted(candidates, key=lambda item: item.ocr_confidence, reverse=True):
+        cx = candidate.text_rect[0] + candidate.text_rect[2]/2
+        cy = candidate.text_rect[1] + candidate.text_rect[3]/2
+        duplicate = False
+        for saved in output:
+            sx = saved.text_rect[0] + saved.text_rect[2]/2
+            sy = saved.text_rect[1] + saved.text_rect[3]/2
+            distance_limit = 1.4*max(candidate.text_rect[3], saved.text_rect[3], 4)
+            if (candidate.current, candidate.maximum) == (saved.current, saved.maximum):
+                duplicate = abs(cx-sx) <= distance_limit and abs(cy-sy) <= distance_limit
+            if duplicate:
+                break
+        if not duplicate:
+            output.append(candidate)
+    return output
+
+
+def _assign_kinds(first: _Candidate, second: _Candidate, orientation: str):
+    if orientation == "vertical":
+        hp, mp = (first, second) if first.rect[1] <= second.rect[1] else (second, first)
+    else:
+        hp, mp = (first, second) if first.rect[0] <= second.rect[0] else (second, first)
+    normal = hp.hp_colour_score + mp.mp_colour_score
+    swapped = mp.hp_colour_score + hp.mp_colour_score
+    if swapped > normal + 0.025:
+        hp, mp = mp, hp
+    return hp, mp
 
 
 def _select(candidates: list[_Candidate]):
@@ -241,7 +353,7 @@ def _select(candidates: list[_Candidate]):
             vertical_alignment = abs(acx-bcx)/mean_w
             vertical_gap = abs(by-(ay+ah))/mean_h if ay <= by else abs(ay-(by+bh))/mean_h
             if vertical_alignment <= 0.40 and vertical_gap <= 5.0:
-                hp, mp = (first, second) if ay <= by else (second, first)
+                hp, mp = _assign_kinds(first, second, "vertical")
                 geometry = vertical_alignment + 0.22*vertical_gap + 0.30*size_error
                 pairs.append((geometry, hp, mp))
 
@@ -249,7 +361,7 @@ def _select(candidates: list[_Candidate]):
             horizontal_alignment = abs(acy-bcy)/mean_h
             horizontal_gap = abs(bx-(ax+aw))/mean_w if ax <= bx else abs(ax-(bx+bw))/mean_w
             if horizontal_alignment <= 1.25 and horizontal_gap <= 3.0:
-                hp, mp = (first, second) if ax <= bx else (second, first)
+                hp, mp = _assign_kinds(first, second, "horizontal")
                 geometry = horizontal_alignment + 0.22*horizontal_gap + 0.30*size_error
                 pairs.append((geometry, hp, mp))
 
@@ -258,9 +370,12 @@ def _select(candidates: list[_Candidate]):
             geometry, hp, mp = item
             colour_support = hp.hp_colour_score + mp.mp_colour_score
             confidence = hp.ocr_confidence + mp.ocr_confidence
-            width_bonus = np.log1p(hp.rect[2] + mp.rect[2])
-            return geometry - 1.6*colour_support - 0.22*confidence - 0.035*width_bonus
-        _, hp, mp = min(pairs, key=pair_score)
+            area = hp.rect[2]*hp.rect[3] + mp.rect[2]*mp.rect[3]
+            quality = geometry - 1.6*colour_support - 0.22*confidence
+            # The player's main HUD is normally the largest valid HP/MP pair.
+            # Area is deliberately the primary key; quality resolves close ties.
+            return area, -quality
+        _, hp, mp = max(pairs, key=pair_score)
         return hp, mp
 
     # Last-resort fallback for a non-standard, non-paired layout.
@@ -295,18 +410,11 @@ def detect_hp_mp(
     ocr = reader or _get_reader()
     result = _run_ocr(ocr, rgb)
     result = [item for item in result if len(item) >= 3 and float(item[2]) >= min_ocr_confidence]
-    hp_candidate, mp_candidate = _select(_extract_candidates(rgb, result))
-
-    annotated = rgb.copy()
-    if draw_boxes:
-        for label, candidate in (("HP", hp_candidate), ("MP", mp_candidate)):
-            if candidate is None:
-                continue
-            x, y, w, h = candidate.rect
-            cv2.rectangle(annotated, (x, y), (x+w, y+h), (255, 0, 0), 2)
-            text = f"{label}: {candidate.current}/{candidate.maximum} ({candidate.percent:.1f}%)"
-            cv2.putText(annotated, text, (x, max(14, y-5)),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 0, 0), 1, cv2.LINE_AA)
-
-    return HpMpReading(_public(hp_candidate, "HP"), _public(mp_candidate, "MP"),
-                       Image.fromarray(annotated))
+    candidates = _extract_candidates(rgb, result)
+    if len(candidates) < 2:
+        # Tiny HUD fonts are often missed at native resolution. A second OCR
+        # pass is only paid for when the first pass did not find a complete pair.
+        scale = 2.0
+        enlarged = cv2.resize(rgb, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
+        enlarged_result = _run_ocr(ocr, enlarged)
+        enlarged_result = [
