@@ -1,4 +1,5 @@
-easyocr>=1.7,<2
+rapidocr>=3.0,<4
+onnxruntime>=1.18,<2
 numpy>=1.23
 opencv-python>=4.8
 Pillow>=9.5
