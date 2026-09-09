@@ -1,6 +1,24 @@
 import numpy as np
 
-from game.status_bar_detector import detect_hp_mp
+from game.status_bar_detector import detect_hp_mp, _Candidate, _select, _find_bar_rect
+
+
+def test_overlapping_rectangles_cannot_be_selected_as_pair():
+    a = _Candidate(100, 100, "100/100", .99, (40, 10, 60, 15), (0, 0, 400, 50), .4, .3)
+    b = _Candidate(50, 100, "50/100", .99, (200, 10, 60, 15), (0, 0, 400, 50), .4, .3)
+    hp, mp = _select([a, b])
+    assert hp is None or mp is None
+
+
+def test_background_and_adjacent_colours_do_not_join_bars():
+    image = np.full((160, 900, 3), (80, 130, 45), dtype=np.uint8)
+    image[30:54, 60:300] = (180, 10, 10)
+    image[58:82, 60:300] = (10, 40, 190)
+    hp = _find_bar_rect(image, (130, 34, 80, 16), 1)
+    mp = _find_bar_rect(image, (130, 62, 80, 16), .6)
+    assert 230 <= hp[2] <= 250
+    assert 230 <= mp[2] <= 250
+    assert hp[1]+hp[3] <= mp[1]
 
 
 class FakeReader:
