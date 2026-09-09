@@ -38,8 +38,8 @@ class _Candidate:
     ocr_confidence: float
     text_rect: Rect
     rect: Rect
-    red_score: float = 0.0
-    blue_score: float = 0.0
+    hp_colour_score: float = 0.0
+    mp_colour_score: float = 0.0
 
     @property
     def percent(self) -> float:
@@ -54,10 +54,12 @@ def _get_reader() -> Any:
     global _READER
     if _READER is None:
         try:
-            import easyocr
+            from rapidocr import RapidOCR
         except ImportError as exc:
-            raise RuntimeError("Brak EasyOCR. Zainstaluj: pip install easyocr") from exc
-        _READER = easyocr.Reader(["en"], gpu=False, verbose=False)
+            raise RuntimeError(
+                "Brak RapidOCR. Zainstaluj: pip install rapidocr onnxruntime"
+            ) from exc
+        _READER = RapidOCR()
     return _READER
 
 
@@ -79,7 +81,27 @@ def _ocr_rect(points: Sequence[Sequence[float]], width: int, height: int) -> Rec
 
 def _normalise(text: str) -> str:
     table = str.maketrans({"|": "/", "\\": "/", "I": "1", "l": "1"})
-    return " ".join(text.translate(table).split())
+    text = " ".join(text.translate(table).split())
+    # Thousands separators: 2,776 / 2,850 -> 2776 / 2850.
+    return re.sub(r"(?<=\d)[,.\s](?=\d)", "", text)
+
+
+def _run_ocr(reader: Any, rgb: np.ndarray) -> list[tuple]:
+    """Normalise RapidOCR and EasyOCR-compatible results."""
+    if hasattr(reader, "readtext"):
+        return list(reader.readtext(
+            rgb, detail=1, paragraph=False, allowlist="0123456789/|Il,. ",
+            text_threshold=0.35, low_text=0.20, link_threshold=0.20,
+            mag_ratio=1.35,
+        ))
+
+    output = reader(cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR))
+    boxes = getattr(output, "boxes", None)
+    texts = getattr(output, "txts", None)
+    scores = getattr(output, "scores", None)
+    if boxes is None or texts is None or scores is None:
+        return []
+    return [(box, text, float(score)) for box, text, score in zip(boxes, texts, scores)]
 
 
 def _same_line(left: tuple, right: tuple) -> bool:
@@ -122,7 +144,9 @@ def _find_bar_rect(rgb: np.ndarray, text_rect: Rect) -> Rect:
     image_h, image_w = rgb.shape[:2]
     tx, ty, tw, th = text_rect
     cx, cy = tx + tw / 2, ty + th / 2
-    pad_x, pad_y = max(35, int(tw * 0.9)), max(8, int(th * 1.5))
+    # Bars in Tibia-like clients can be many times wider than their text.
+    pad_x = min(image_w // 2, max(120, int(tw * 8.0)))
+    pad_y = max(10, int(th * 2.0))
     rx1, ry1 = max(0, tx-pad_x), max(0, ty-pad_y)
     rx2, ry2 = min(image_w, tx+tw+pad_x), min(image_h, ty+th+pad_y)
     gray = cv2.cvtColor(rgb[ry1:ry2, rx1:rx2], cv2.COLOR_RGB2GRAY)
@@ -134,13 +158,20 @@ def _find_bar_rect(rgb: np.ndarray, text_rect: Rect) -> Rect:
     for contour in contours:
         x, y, w, h = cv2.boundingRect(contour)
         gx, gy = rx1+x, ry1+y
-        if not (gx <= cx <= gx+w and gy <= cy <= gy+h):
+        contains_text = (
+            gx <= tx + 2 and gx + w >= tx + tw - 2
+            and gy <= cy <= gy + h
+        )
+        if not contains_text:
             continue
-        if w < max(45, tw*1.05) or h < max(5, th*0.55):
+        if w < max(50, tw*1.12) or h < max(5, th*0.45):
             continue
-        if w/max(h, 1) < 2.2 or h > th*3.2:
+        if w/max(h, 1) < 2.5 or h > th*2.8:
             continue
-        score = abs(h-th*1.35) + 0.03*abs(w-tw*1.8)
+        # Prefer an outline with the text-like height and a wide horizontal span.
+        height_error = abs(h - th*1.15) / max(th, 1)
+        width_bonus = min(w / max(tw, 1), 12.0) * 0.035
+        score = height_error - width_bonus
         choices.append((score, (gx, gy, w, h)))
     if choices:
         return min(choices, key=lambda item: item[0])[1]
@@ -157,10 +188,14 @@ def _colour_scores(rgb: np.ndarray, rect: Rect) -> tuple[float, float]:
     roi = rgb[max(0, y-my):min(ih, y+h+my), max(0, x-mx):min(iw, x+w+mx)]
     hue, saturation, value = cv2.split(cv2.cvtColor(roi, cv2.COLOR_RGB2HSV))
     colourful = (saturation >= 70) & (value >= 45)
-    red = colourful & ((hue <= 12) | (hue >= 168))
+    red = colourful & ((hue <= 12) | (hue >= 172))
+    green = colourful & (hue >= 35) & (hue <= 88)
     blue = colourful & (hue >= 88) & (hue <= 135)
+    purple = colourful & (hue >= 130) & (hue <= 171)
     total = max(1, colourful.size)
-    return float(red.sum()/total), float(blue.sum()/total)
+    hp_colour = red | green
+    mp_colour = blue | purple
+    return float(hp_colour.sum()/total), float(mp_colour.sum()/total)
 
 
 def _extract_candidates(rgb: np.ndarray, ocr_result: Sequence) -> list[_Candidate]:
@@ -192,30 +227,53 @@ def _extract_candidates(rgb: np.ndarray, ocr_result: Sequence) -> list[_Candidat
 def _select(candidates: list[_Candidate]):
     if not candidates:
         return None, None
-    hp = max(candidates, key=lambda c: c.red_score + 0.12*c.ocr_confidence)
-    remaining = [c for c in candidates if c is not hp]
-    mp = max(remaining, key=lambda c: c.blue_score + 0.12*c.ocr_confidence) if remaining else None
+    pairs = []
+    for index, first in enumerate(candidates):
+        for second in candidates[index + 1:]:
+            ax, ay, aw, ah = first.rect
+            bx, by, bw, bh = second.rect
+            acx, acy = ax + aw/2, ay + ah/2
+            bcx, bcy = bx + bw/2, by + bh/2
+            mean_w, mean_h = max(1, (aw+bw)/2), max(1, (ah+bh)/2)
+            size_error = abs(np.log(max(aw, 1)/max(bw, 1))) + abs(np.log(max(ah, 1)/max(bh, 1)))
 
-    if len(candidates) >= 2 and hp.red_score + (mp.blue_score if mp else 0) < 0.025:
-        pairs = []
-        for first in candidates:
-            for second in candidates:
-                if first is second or first.rect[1] >= second.rect[1]:
-                    continue
-                x_delta = abs(first.rect[0]+first.rect[2]/2 - second.rect[0]-second.rect[2]/2)
-                width = max(first.rect[2], second.rect[2])
-                y_gap = second.rect[1] - first.rect[1] - first.rect[3]
-                if x_delta <= width*0.35 and -first.rect[3] <= y_gap <= first.rect[3]*4:
-                    pairs.append((x_delta+abs(y_gap), first, second))
-        if pairs:
-            _, hp, mp = min(pairs, key=lambda item: item[0])
+            # Stacked layout: HP above MP.
+            vertical_alignment = abs(acx-bcx)/mean_w
+            vertical_gap = abs(by-(ay+ah))/mean_h if ay <= by else abs(ay-(by+bh))/mean_h
+            if vertical_alignment <= 0.40 and vertical_gap <= 5.0:
+                hp, mp = (first, second) if ay <= by else (second, first)
+                geometry = vertical_alignment + 0.22*vertical_gap + 0.30*size_error
+                pairs.append((geometry, hp, mp))
+
+            # Side-by-side layout: HP on the left, MP on the right.
+            horizontal_alignment = abs(acy-bcy)/mean_h
+            horizontal_gap = abs(bx-(ax+aw))/mean_w if ax <= bx else abs(ax-(bx+bw))/mean_w
+            if horizontal_alignment <= 1.25 and horizontal_gap <= 3.0:
+                hp, mp = (first, second) if ax <= bx else (second, first)
+                geometry = horizontal_alignment + 0.22*horizontal_gap + 0.30*size_error
+                pairs.append((geometry, hp, mp))
+
+    if pairs:
+        def pair_score(item):
+            geometry, hp, mp = item
+            colour_support = hp.hp_colour_score + mp.mp_colour_score
+            confidence = hp.ocr_confidence + mp.ocr_confidence
+            width_bonus = np.log1p(hp.rect[2] + mp.rect[2])
+            return geometry - 1.6*colour_support - 0.22*confidence - 0.035*width_bonus
+        _, hp, mp = min(pairs, key=pair_score)
+        return hp, mp
+
+    # Last-resort fallback for a non-standard, non-paired layout.
+    hp = max(candidates, key=lambda c: c.hp_colour_score + 0.12*c.ocr_confidence)
+    remaining = [c for c in candidates if c is not hp]
+    mp = max(remaining, key=lambda c: c.mp_colour_score + 0.12*c.ocr_confidence) if remaining else None
     return hp, mp
 
 
 def _public(candidate: Optional[_Candidate], kind: str) -> Optional[BarReading]:
     if candidate is None:
         return None
-    colour = candidate.red_score if kind == "HP" else candidate.blue_score
+    colour = candidate.hp_colour_score if kind == "HP" else candidate.mp_colour_score
     confidence = min(1.0, 0.75*candidate.ocr_confidence + 2.5*colour)
     return BarReading(candidate.current, candidate.maximum, candidate.percent,
                       candidate.rect, candidate.raw_text, confidence)
@@ -231,14 +289,11 @@ def detect_hp_mp(
     """Locate HP/MP anywhere and read current, maximum and percentage.
 
     PIL input is recommended. Numpy input must use RGB channel order. Pass an
-    existing EasyOCR reader to avoid owning the model outside this module.
+    existing OCR reader to avoid recreating the model outside this module.
     """
     rgb = _as_rgb(image)
     ocr = reader or _get_reader()
-    result = ocr.readtext(
-        rgb, detail=1, paragraph=False, allowlist="0123456789/|Il ",
-        text_threshold=0.35, low_text=0.20, link_threshold=0.20, mag_ratio=1.35,
-    )
+    result = _run_ocr(ocr, rgb)
     result = [item for item in result if len(item) >= 3 and float(item[2]) >= min_ocr_confidence]
     hp_candidate, mp_candidate = _select(_extract_candidates(rgb, result))
 
@@ -255,4 +310,3 @@ def detect_hp_mp(
 
     return HpMpReading(_public(hp_candidate, "HP"), _public(mp_candidate, "MP"),
                        Image.fromarray(annotated))
-
