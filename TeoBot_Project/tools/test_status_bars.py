@@ -15,6 +15,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from game.status_bar_detector import detect_hp_mp
+from game.battle_list_detector import detect_battle_list
 
 IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".bmp"}
 
@@ -41,6 +42,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Test automatic HP/MP detection")
     parser.add_argument("inputs", nargs="+", type=Path, help="Images or directories")
     parser.add_argument("--output", type=Path, default=Path("hp_mp_results"))
+    parser.add_argument("--battle-list", action="store_true", help="Detect Battle List instead of calibrating HP/MP")
     args = parser.parse_args()
 
     images = collect_images(args.inputs)
@@ -51,6 +53,14 @@ def main() -> int:
     report = {}
     for path in images:
         with Image.open(path) as image:
+            if args.battle_list:
+                battle = detect_battle_list(image)
+                output_name = f"{path.stem}_{path.suffix[1:]}_battle.png"
+                battle.annotated_image.save(args.output / output_name)
+                report[path.name] = {"status": battle.status, "rect": battle.rect,
+                                     "entries": battle.entries, "annotated_image": output_name}
+                print(f"{path.name}: {battle.status}, {battle.entries}")
+                continue
             result = detect_hp_mp(image)
         output_name = f"{path.stem}_detected.png"
         result.annotated_image.save(args.output / output_name)
