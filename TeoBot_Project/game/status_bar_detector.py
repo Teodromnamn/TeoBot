@@ -28,6 +28,7 @@ class HpMpReading:
     hp: Optional[BarReading]
     mp: Optional[BarReading]
     annotated_image: Image.Image
+    status: str = "ok"
 
 
 @dataclass
@@ -514,13 +515,22 @@ def detect_hp_mp(image, *, reader=None, draw_boxes=True, min_ocr_confidence=.20)
     pair = _tibia_top_pair(rgb)
     annotated = rgb.copy()
     readings = []
+    status = "top_pair_not_found"
     if pair:
         ocr = reader if reader is not None else _get_reader()
         for rect in pair:
             x, y, w, h = rect
             # Read the whole bar, with padding and enlargement for tiny fonts.
             crop = rgb[max(0, y-3):min(rgb.shape[0], y+h+3), max(0, x-2):x+w+2]
+            # Tibia centres resource labels; retain the central half so the
+            # long empty sides cannot force OCR to shrink the glyphs again.
+            margin = crop.shape[1]//4
+            crop = crop[:, margin:crop.shape[1]-margin]
             crop = cv2.resize(crop, None, fx=3, fy=3, interpolation=cv2.INTER_CUBIC)
+            # Keep tiny letters away from the detector's image boundaries and
+            # avoid an extremely wide, short input being downscaled internally.
+            crop = cv2.copyMakeBorder(crop, 96, 96, 32, 32,
+                                      cv2.BORDER_CONSTANT, value=(32, 32, 32))
             found = []
             for _, text, confidence in _run_ocr(ocr, crop):
                 match = _VALUE_RE.search(_normalise(str(text)))
@@ -529,13 +539,15 @@ def detect_hp_mp(image, *, reader=None, draw_boxes=True, min_ocr_confidence=.20)
                     if maximum > 0:
                         found.append((float(confidence), current, maximum, str(text)))
             if not found:
+                status = "hp_ocr_unreadable" if not readings else "mp_ocr_unreadable"
                 break
             confidence, current, maximum, text = max(found)
             if current != maximum:
+                status = "hp_not_full" if not readings else "mp_not_full"
                 break
             readings.append(BarReading(current, maximum, 100., rect, text, confidence))
     if len(readings) != 2:
-        return HpMpReading(None, None, Image.fromarray(annotated))
+        return HpMpReading(None, None, Image.fromarray(annotated), status)
     if draw_boxes:
         for label, reading in zip(("HP", "MP"), readings):
             x, y, w, h = reading.rect
