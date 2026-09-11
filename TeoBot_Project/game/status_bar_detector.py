@@ -427,7 +427,7 @@ def _public(candidate: Optional[_Candidate], kind: str) -> Optional[BarReading]:
                       candidate.rect, candidate.raw_text, confidence)
 
 
-def detect_hp_mp(
+def detect_hp_mp_legacy(
     image: Image.Image | np.ndarray,
     *,
     reader: Any = None,
@@ -470,3 +470,76 @@ def detect_hp_mp(
 
     return HpMpReading(_public(hp_candidate, "HP"), _public(mp_candidate, "MP"),
                        Image.fromarray(annotated))
+
+
+def _tibia_top_pair(rgb: np.ndarray):
+    """Locate adjacent, similarly sized green/blue bars in the top 12%."""
+    ih, iw = rgb.shape[:2]
+    hsv = cv2.cvtColor(rgb[:max(1, int(ih*.12))], cv2.COLOR_RGB2HSV)
+    hue, sat, val = cv2.split(hsv)
+    groups = []
+    for low, high in ((35, 87), (88, 135)):
+        mask = ((hue >= low) & (hue <= high) & (sat >= 85) & (val >= 45)).astype(np.uint8)*255
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((1, 13), np.uint8))
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        boxes = []
+        for c in contours:
+            x, y, w, h = cv2.boundingRect(c)
+            if w >= iw*.15 and 3 <= h <= max(24, ih*.025) and w/h >= 10:
+                boxes.append((x, y, w, h))
+        groups.append(boxes)
+    pairs = []
+    for a in groups[0]:
+        for b in groups[1]:
+            gap = b[0]-a[0]-a[2]
+            if (0 <= gap <= iw*.04 and abs(a[1]-b[1]) <= max(3, a[3]/2)
+                    and .85 <= a[2]/b[2] <= 1.18):
+                pairs.append((a, b))
+    if not pairs:
+        return None
+    a, b = max(pairs, key=lambda pair: sum(r[2]*r[3] for r in pair))
+    # Blue gradients can fall below the brightness threshold sooner than green.
+    top, bottom = min(a[1], b[1]), max(a[1]+a[3], b[1]+b[3])
+    return (a[0], top, a[2], bottom-top), (b[0], top, b[2], bottom-top)
+
+
+def detect_hp_mp(image, *, reader=None, draw_boxes=True, min_ocr_confidence=.20):
+    """Calibrate Tibia top bars only; both numeric resources must be full.
+
+    Returns hp=mp=None if either bar is absent, unreadable or not full.
+    Rectangles use original image coordinates and include the complete fill.
+    Reuse saved rectangles for subsequent readings; this function calibrates.
+    """
+    rgb = _as_rgb(image)
+    pair = _tibia_top_pair(rgb)
+    annotated = rgb.copy()
+    readings = []
+    if pair:
+        ocr = reader if reader is not None else _get_reader()
+        for rect in pair:
+            x, y, w, h = rect
+            # Read the whole bar, with padding and enlargement for tiny fonts.
+            crop = rgb[max(0, y-3):min(rgb.shape[0], y+h+3), max(0, x-2):x+w+2]
+            crop = cv2.resize(crop, None, fx=3, fy=3, interpolation=cv2.INTER_CUBIC)
+            found = []
+            for _, text, confidence in _run_ocr(ocr, crop):
+                match = _VALUE_RE.search(_normalise(str(text)))
+                if match and confidence >= min_ocr_confidence:
+                    current, maximum = map(int, match.groups())
+                    if maximum > 0:
+                        found.append((float(confidence), current, maximum, str(text)))
+            if not found:
+                break
+            confidence, current, maximum, text = max(found)
+            if current != maximum:
+                break
+            readings.append(BarReading(current, maximum, 100., rect, text, confidence))
+    if len(readings) != 2:
+        return HpMpReading(None, None, Image.fromarray(annotated))
+    if draw_boxes:
+        for label, reading in zip(("HP", "MP"), readings):
+            x, y, w, h = reading.rect
+            cv2.rectangle(annotated, (x, y), (x+w-1, y+h-1), (255, 0, 0), 1)
+            cv2.putText(annotated, label, (x, y+h+14), cv2.FONT_HERSHEY_SIMPLEX,
+                        .4, (255, 0, 0), 1)
+    return HpMpReading(readings[0], readings[1], Image.fromarray(annotated))
