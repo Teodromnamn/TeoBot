@@ -55,13 +55,14 @@ def main() -> int:
         output_name = f"{path.stem}_detected.png"
         result.annotated_image.save(args.output / output_name)
         report[path.name] = {
+            "status": result.status,
             "hp": serialise(result.hp),
             "mp": serialise(result.mp),
             "annotated_image": output_name,
         }
         hp = f"{result.hp.current}/{result.hp.maximum}" if result.hp else "not found"
         mp = f"{result.mp.current}/{result.mp.maximum}" if result.mp else "not found"
-        print(f"{path.name}: HP={hp}, MP={mp}")
+        print(f"{path.name}: HP={hp}, MP={mp}, status={result.status}")
 
     report_path = args.output / "results.json"
     report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
