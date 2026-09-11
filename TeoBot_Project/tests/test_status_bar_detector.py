@@ -2,7 +2,26 @@ import numpy as np
 import cv2
 import pytest
 
-from game.status_bar_detector import detect_hp_mp, _Candidate, _select, _find_bar_rect
+from game.status_bar_detector import detect_hp_mp_legacy as detect_hp_mp, _Candidate, _select, _find_bar_rect
+
+
+@pytest.mark.parametrize("mana", ["60/60", "10/60", "unreadable"])
+def test_tibia_calibration_requires_both_full(mana):
+    from game.status_bar_detector import detect_hp_mp as calibrate
+    image = np.zeros((720, 1280, 3), np.uint8)
+    image[4:14, 120:570] = (0, 180, 0)
+    image[4:14, 578:1028] = (0, 70, 180)
+    class Reader:
+        calls = 0
+        def readtext(self, image, **kwargs):
+            self.calls += 1
+            return [([[0,0],[100,0],[100,20],[0,20]], "155/155" if self.calls == 1 else mana, .99)]
+    result = calibrate(image, reader=Reader())
+    if mana == "60/60":
+        assert result.hp.current == 155 and result.mp.current == 60
+        assert result.hp.rect == (120, 4, 450, 10)
+    else:
+        assert result.hp is None and result.mp is None
 
 
 @pytest.mark.parametrize("fraction", [0, .1, .5, 1])
