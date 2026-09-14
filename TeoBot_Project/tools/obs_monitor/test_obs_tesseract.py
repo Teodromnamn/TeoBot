@@ -58,7 +58,13 @@ def parse_reading(result):
     # Mean confidence includes the unrelated MP suffix and is NOT calibrated
     # like RapidOCR's score. Preserve it for diagnostics; validate numeric syntax.
     raw=result.txts
-    text=re.sub(r'(?<=\d)[ ,.\u00a0](?=\d)','',raw[0].split('(', 1)[0])
+    # Tesseract sometimes adds one '(' BEFORE the main ratio.
+    # Remove only that leading artifact; never search arbitrary tooltip text.
+    text=raw[0].strip()
+    leading_parenthesis=text.startswith('(')
+    if leading_parenthesis:
+        text=text[1:].lstrip()
+    text=re.sub(r'(?<=\d)[ ,.\u00a0](?=\d)','',text.split('(', 1)[0])
     match=re.fullmatch(r'\s*(\d+)\s*/\s*(\d+)\s*',text)
     value=None
     if match:
@@ -66,7 +72,8 @@ def parse_reading(result):
         if maximum>0 and 0<=current<=maximum:
             value={'current':current,'maximum':maximum,'percent':100*current/maximum,
                    'confidence':result.scores[0]}
-    return {'raw':raw,'value':value}
+    return {'raw':raw,'value':value,
+            'leading_parenthesis_ignored':leading_parenthesis}
 
 
 class Analyzer:

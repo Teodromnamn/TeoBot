@@ -16,6 +16,18 @@ class ReadingsTests(unittest.TestCase):
         for text in ('85/85', '85/85(0/', '85/85(anything)', '85/85 (294 XP'):
             self.assertEqual(self.parse(text)['current'], 85)
 
+    def test_leading_parenthesis_artifact(self):
+        for current in (57, 51, 55):
+            result = parse_reading(SimpleNamespace(
+                txts=[f'({current}/85(0/01)'], scores=[.9]))
+            self.assertEqual(result['value']['current'], current)
+            self.assertEqual(result['value']['maximum'], 85)
+            self.assertTrue(result['leading_parenthesis_ignored'])
+
+    def test_leading_parenthesis_does_not_enable_search(self):
+        for text in ('(XP 57/85', '((57/85', '(57/', '(90/85', '(57/85 garbage'):
+            self.assertIsNone(self.parse(text))
+
     def test_maximum_can_grow(self):
         value = self.parse('10200/10200')
         self.assertEqual(value['maximum'], 10200)
