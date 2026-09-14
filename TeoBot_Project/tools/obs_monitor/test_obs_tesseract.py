@@ -19,9 +19,9 @@ import test_obs_pipeline as pipeline
 
 
 def binary(image):
-    low=image.min(axis=2).astype(np.int16)
-    high=image.max(axis=2).astype(np.int16)
-    return np.where((low>=140)&(high-low<=65),0,255).astype('uint8')
+    # Keep tinted anti-aliased edges: benchmark variant min_threshold_120.
+    low=image.min(axis=2)
+    return np.where(low>=120,0,255).astype('uint8')
 
 
 class Engine:
@@ -58,8 +58,8 @@ def parse_reading(result):
     # Mean confidence includes the unrelated MP suffix and is NOT calibrated
     # like RapidOCR's score. Preserve it for diagnostics; validate numeric syntax.
     raw=result.txts
-    text=re.sub(r'(?<=\d)[ ,.\u00a0](?=\d)','',raw[0])
-    match=re.fullmatch(r'\s*(\d+)\s*/\s*(\d+)(?:\s*\([^)]*\))?\s*',text)
+    text=re.sub(r'(?<=\d)[ ,.\u00a0](?=\d)','',raw[0].split('(', 1)[0])
+    match=re.fullmatch(r'\s*(\d+)\s*/\s*(\d+)\s*',text)
     value=None
     if match:
         current,maximum=map(int,match.groups())

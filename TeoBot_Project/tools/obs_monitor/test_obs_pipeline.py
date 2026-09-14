@@ -118,14 +118,43 @@ def result_status(marker_status, age, elapsed_ms, statuses):
     return 'OK'
 
 
-def publish(path, status, readings=None, age_ms=None, max_age_ms=250):
-    valid = status == 'OK'
+def publish(path, status, readings=None, age_ms=None, max_age_ms=250, bar_statuses=None):
+    """Publish each resource independently; retain history without refreshing it."""
     now_ms = time.time_ns() // 1000000
-    data = {'status': status, 'valid': valid, 'published_at_unix_ms': now_ms,
-            'expires_at_unix_ms': now_ms + max(0, max_age_ms-age_ms) if valid else now_ms,
-            'result_age_ms': age_ms,
-            'hp': readings[0]['value'] if valid else None,
-            'mp': readings[1]['value'] if valid else None}
+    fresh = (status in ('OK', 'BRAK_ODCZYTU', 'POTWIERDZANIE_MAKSIMUM')
+             and age_ms is not None and 0 <= age_ms <= max_age_ms)
+    previous = {}
+    try:
+        previous = json.loads(path.read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        pass
+    data = {'schema': 2, 'status': status, 'published_at_unix_ms': now_ms,
+            'result_age_ms': age_ms}
+    resources = {}
+    for index, name in enumerate(('hp', 'mp')):
+        reading = readings[index] if readings else {}
+        value = reading.get('value')
+        accepted = (bar_statuses is None or bar_statuses[index] in ('ok', 'maximum_changed'))
+        valid = fresh and accepted and value is not None
+        old = previous.get('resources', {}).get(name, {})
+        last_known = old.get('last_known')
+        expires = now_ms + max(0, max_age_ms-age_ms) if valid else now_ms
+        if valid:
+            last_known = {'value': value, 'source': 'top_text',
+                          'observed_at_unix_ms': now_ms-age_ms,
+                          'expires_at_unix_ms': expires}
+        resources[name] = {
+            'valid': valid, 'quality': 'exact' if valid else ('stale' if last_known else 'unavailable'),
+            'source': 'top_text' if valid else None,
+            'value': value if valid else None,
+            'reason': (bar_statuses[index] if fresh and bar_statuses else status),
+            'observed_at_unix_ms': now_ms-age_ms if valid else None,
+            'expires_at_unix_ms': expires,
+            'last_known': last_known}
+        data[name] = value if valid else None
+    data['resources'] = resources
+    data['valid'] = all(r['valid'] for r in resources.values())
+    data['expires_at_unix_ms'] = min(r['expires_at_unix_ms'] for r in resources.values())
     temporary = path.with_suffix('.tmp')
     temporary.write_text(json.dumps(data, indent=2), encoding='utf-8')
     temporary.replace(path)
@@ -381,7 +410,7 @@ def main():
                         status = 'BLAD_KAMERY'
                     elif newest is None or end-newest[1] > .5:
                         status = 'BRAK_KLATEK'
-                publish(latest_path, status, readings, result_age, args.max_age_ms)
+                publish(latest_path, status, readings, result_age, args.max_age_ms, statuses)
                 row = {'sequence': seq, 'elapsed_s': end-start,
                        'status': status, 'valid': status == 'OK',
                        'marker_age_ms': marker_age, 'result_age_ms': result_age,
