@@ -14,7 +14,7 @@ import numpy as np
 from test_tesseract_resident import ResidentTesseract
 
 
-def locate(frame):
+def locate(frame, return_bars=False):
     """Find aligned full red/blue bars in the right quarter; reject ambiguity."""
     h, w = frame.shape[:2]
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -45,7 +45,7 @@ def locate(frame):
     # Keep all space to the panel edge, not a fixed number of digits.
     left = right+max(2, round(step*.3))
     boxes = [(left, y-2, w-left-2, step+1) for y in (red[1], blue[1])]
-    return boxes
+    return (boxes, (red, blue)) if return_bars else boxes
 
 
 def variants(crop):

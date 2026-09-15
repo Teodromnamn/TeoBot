@@ -111,6 +111,8 @@ def result_status(marker_status, age, elapsed_ms, statuses):
         return marker_status
     if age is None or age < 0:
         return 'ZEGAR_NIEZGODNY'
+    if any(s == 'source_conflict' for s in statuses):
+        return 'KONFLIKT_ZRODEL'
     if any(s == 'unreadable' for s in statuses):
         return 'BRAK_ODCZYTU'
     if any(s == 'maximum_pending' for s in statuses):
@@ -121,7 +123,7 @@ def result_status(marker_status, age, elapsed_ms, statuses):
 def publish(path, status, readings=None, age_ms=None, max_age_ms=250, bar_statuses=None):
     """Publish each resource independently; retain history without refreshing it."""
     now_ms = time.time_ns() // 1000000
-    fresh = (status in ('OK', 'BRAK_ODCZYTU', 'POTWIERDZANIE_MAKSIMUM')
+    fresh = (status in ('OK', 'BRAK_ODCZYTU', 'POTWIERDZANIE_MAKSIMUM', 'KONFLIKT_ZRODEL')
              and age_ms is not None and 0 <= age_ms <= max_age_ms)
     previous = {}
     try:
@@ -134,18 +136,20 @@ def publish(path, status, readings=None, age_ms=None, max_age_ms=250, bar_status
     for index, name in enumerate(('hp', 'mp')):
         reading = readings[index] if readings else {}
         value = reading.get('value')
-        accepted = (bar_statuses is None or bar_statuses[index] in ('ok', 'maximum_changed'))
+        accepted = (bar_statuses is None or bar_statuses[index] in ('ok', 'maximum_changed', 'side_only'))
         valid = fresh and accepted and value is not None
         old = previous.get('resources', {}).get(name, {})
         last_known = old.get('last_known')
         expires = now_ms + max(0, max_age_ms-age_ms) if valid else now_ms
         if valid:
-            last_known = {'value': value, 'source': 'top_text',
+            last_known = {'value': value, 'source': reading.get('source', 'top_text'),
                           'observed_at_unix_ms': now_ms-age_ms,
                           'expires_at_unix_ms': expires}
         resources[name] = {
-            'valid': valid, 'quality': 'exact' if valid else ('stale' if last_known else 'unavailable'),
-            'source': 'top_text' if valid else None,
+            'valid': valid, 'quality': reading.get('quality', 'exact') if valid else ('stale' if last_known else 'unavailable'),
+            'source': reading.get('source', 'top_text') if valid else None,
+            'verification': reading.get('verification', 'not_checked') if fresh else 'not_checked',
+            'verified_current': bool(valid and reading.get('verification') == 'current_agrees'),
             'value': value if valid else None,
             'reason': (bar_statuses[index] if fresh and bar_statuses else status),
             'observed_at_unix_ms': now_ms-age_ms if valid else None,
@@ -172,6 +176,9 @@ class ConfirmMaximum:
             self.pending, self.count = None, 0
             return 'unreadable'
         maximum = value['maximum']
+        if maximum is None:
+            self.pending, self.count = None, 0
+            return 'side_only'
         if maximum == self.maximum:
             self.pending, self.count = None, 0
             return 'ok'
@@ -337,6 +344,7 @@ def main():
         guards = [ConfirmMaximum(v['maximum']) for v in values]
         (output / 'calibration.json').write_text(json.dumps({'rectangles': pair,
                     'frame_shape': frame.shape, 'readings': readings}, indent=2), encoding='utf-8')
+        calibration_frame, calibration_readings = frame, readings
         del engine
         gc.collect()
         tuning = []
@@ -360,6 +368,15 @@ def main():
         _, _, frame = camera.get()
         read_pair(engine, frame, pair)
         hp_analyzer = HpMpAnalyzer(engine, pair)
+        if hasattr(hp_analyzer, 'calibrate'):
+            side_config = hp_analyzer.calibrate(calibration_frame, calibration_readings, guards)
+            (output / 'side_calibration.json').write_text(json.dumps(side_config, indent=2), encoding='utf-8')
+            side_preview = calibration_frame.copy()
+            for x, y, w, h in side_config['side_rectangles']:
+                cv2.rectangle(side_preview, (x, y), (x+w-1, y+h-1), (0, 0, 255), 1)
+            cv2.imencode('.png', side_preview)[1].tofile(output / 'side_calibration.png')
+            print(f'Sprawdz boczne ramki: {output / "side_calibration.png"}')
+        del calibration_frame
         print(f'Wybrano {selected} watkow; cel {args.target_fps:g} odczytow/s.')
         seq, _, _ = camera.get()
         initial_seq = seq
@@ -398,7 +415,12 @@ def main():
                 analysis = hp_analyzer.analyze(frame)
                 readings = analysis['readings']
                 end = time.perf_counter()
-                statuses = [g.update(r['value']) for g, r in zip(guards, readings)]
+                statuses = []
+                for guard, reading in zip(guards, readings):
+                    bar_status = guard.update(reading['value'])
+                    if reading.get('verification') == 'conflict':
+                        bar_status = 'source_conflict'
+                    statuses.append(bar_status)
                 result_age = marker_age + (end-received)*1000
                 status = result_status(marker_status, marker_age, (end-received)*1000, statuses)
                 if result_age > args.max_age_ms:
@@ -417,6 +439,8 @@ def main():
                        'marker_ms': camera.marker_ms,
                        'prepare_ms': analysis['prepare_ms'],
                        'recognition_ms': analysis['recognition_ms'],
+                       'side_ms': analysis.get('side_ms', 0.),
+                       'side_checked': analysis.get('side_checked', False),
                        'crop_sizes': json.dumps(analysis['crop_sizes']),
                        'ocr_ms': (end-analysis_start)*1000,
                        'wait_ms': (analysis_start-received)*1000,
@@ -434,6 +458,7 @@ def main():
                 if end-log_time >= 1:
                     print(f'{status} | SUROWY HP={readings[0]["value"]} | '
                           f'SUROWY MP={readings[1]["value"]} | '
+                          f'HP/MP check={[r.get("verification", "not_checked") for r in readings]} | '
                           f'OCR={row["ocr_ms"]:.1f} ms | wiek wyniku={result_age:.1f} ms', flush=True)
                     log_time = end
                 if args.preview:
@@ -452,6 +477,9 @@ def main():
                       'marker_ms': stats([r['marker_ms'] for r in rows]),
                       'prepare_ms': stats([r['prepare_ms'] for r in rows]),
                       'recognition_ms': stats([r['recognition_ms'] for r in rows]),
+                      'side_ms': stats([r['side_ms'] for r in rows if r['side_checked']]),
+                      'side_checks': sum(r['side_checked'] for r in rows),
+                      'source_conflicts': sum(r['status'] == 'KONFLIKT_ZRODEL' for r in rows),
                       'valid_pairs': sum(r['valid'] for r in rows),
                       'result_age_ms': stats([r['result_age_ms'] for r in rows]),
                       'max_age_ms': args.max_age_ms, 'invalid_events': len(events),
@@ -485,3 +513,4 @@ if __name__ == '__main__':
     except Exception as error:
         print(f'BLAD: {error}', file=sys.stderr)
         sys.exit(1)
+

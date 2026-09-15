@@ -96,6 +96,7 @@ class Analyzer:
 def main():
     parser=argparse.ArgumentParser(add_help=False)
     parser.add_argument('--directory',default=r'C:\Program Files\Tesseract-OCR')
+    parser.add_argument('--verify-side', action='store_true', help='Porownuj boczne liczniki 2/s na tej samej klatce')
     parser.add_argument('--threads',type=int,choices=[1,2,4],default=2)
     args,remaining=parser.parse_known_args()
     if '--retune' in remaining:
@@ -112,7 +113,11 @@ def main():
     try:
         # Keep exactly one API alive, including calibration and measured run.
         pipeline.make_engine=lambda threads:engine
-        pipeline.HpMpAnalyzer=Analyzer
+        if args.verify_side:
+            from dual_source import DualAnalyzer
+            pipeline.HpMpAnalyzer=lambda engine, rectangles: DualAnalyzer(Analyzer(engine, rectangles))
+        else:
+            pipeline.HpMpAnalyzer=Analyzer
         pipeline.parse_output=parse_reading
         sys.argv=[sys.argv[0],*remaining,'--threads',str(args.threads)]
         print(f'Tesseract {engine.tess.version}; binary; threads={args.threads}; no OCR cache.',flush=True)
@@ -127,3 +132,4 @@ def main():
 if __name__=='__main__':
     try:main()
     except KeyboardInterrupt:print('Przerwano.')
+
