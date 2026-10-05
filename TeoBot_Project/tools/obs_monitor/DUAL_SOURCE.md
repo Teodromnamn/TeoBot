@@ -41,3 +41,19 @@ and recognition. `ocr_ms`/result age include the entire analysis.
 Without `--verify-side`, the top-only mode remains available.
 Tests: `python tools/obs_monitor/check_dual_source.py` and
 `python tools/obs_monitor/check_reading_contract.py`.
+
+## Capture conflicts for diagnosis
+
+Add `--capture-conflicts` alongside `--verify-side`. At exit, the program creates
+`ocr_conflicts_TIMESTAMP.zip` in the working directory. Each case contains both
+HP/MP top and side crops from the same frame, top prepared/binary images, side
+binary images and raw readings with rectangles in `reading.json`. Preprocessing
+is replayed deterministically without additional recognition. No full frames
+are saved. The timestamp is save time, not game-render time. Raw OCR is evidence,
+not a ground-truth label.
+
+Limits: 60 cases, at most two per identical disagreement, at least five seconds
+between duplicates and 0.5 seconds globally. Capture is opt-in and synchronous;
+its cost is included in end-to-end analysis time and expiry checks. A storage
+failure disables capture and leaves OCR running. No diagnostic mode changes the
+recognition or conflict resolution rules.
