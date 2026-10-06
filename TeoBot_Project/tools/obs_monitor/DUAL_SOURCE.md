@@ -298,3 +298,5 @@ change if possible. Inspect warnings, throughput, age and original images;
 zero conflicts or valid output alone does not measure independent accuracy.
 
 Repeated supported current values retain temporal confirmation across top/sidebar provenance changes when the effective maximum is unchanged. A new agreeing top/sidebar pair supported by color may confirm a changed current following a supported candidate. Changing single-counter readings, changed effective maxima, unsupported observations, and interruptions still require a fresh confirmation.
+
+Top bar color evidence rejects broad bright neutral tooltips and neutral components spanning almost the full bar height (cursor at fill edge). Covered color evidence is unavailable, never interpreted as a lower resource value. Sidebar OCR plus remaining visible color can still supply current using cached maximum.

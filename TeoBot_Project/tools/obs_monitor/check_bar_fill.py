@@ -19,6 +19,20 @@ class Tests(unittest.TestCase):
             self.assertEqual(checked['fill_status'],'conflict')
             self.assertIsNone(gate.apply(checked,now)['value'])
 
+    def test_gray_popup_tail_is_unknown_not_shorter_fill(self):
+        full=np.full((10,770,3),(0,180,0),dtype=np.uint8)
+        covered=full.copy();covered[:,320:750]=190;covered[:,750:]=30
+        result=FillEvidence(full,'hp').measure(covered)
+        self.assertFalse(result['available'])
+        self.assertEqual(result['reason'],'neutral_overlay')
+        clean=full.copy();clean[:,600:]=30;clean[2:8,370:374]=255
+        self.assertTrue(FillEvidence(full,'hp').measure(clean)['available'])
+
+    def test_neutral_cursor_at_edge_is_unknown(self):
+        full=np.full((14,770,3),(0,180,0),dtype=np.uint8)
+        covered=full.copy();covered[:,393:]=30;covered[:,369:388]=170
+        self.assertEqual(FillEvidence(full,'hp').measure(covered)['reason'],'neutral_overlay')
+
     def test_internal_occlusion_yields_unknown_instead_of_guess(self):
         full = np.full((8,100,3),(0,180,0),dtype=np.uint8)
         partial = full.copy()

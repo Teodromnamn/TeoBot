@@ -32,6 +32,19 @@ class FillEvidence:
     def measure(self, image):
         if image.shape != self.shape or not len(self.rows):
             return {'available':False, 'reason':'layout_or_calibration'}
+        hue,saturation,value=cv2.split(cv2.cvtColor(image,cv2.COLOR_BGR2HSV))
+        if not self.sidebar:
+            # A gray tooltip can look like a perfectly contiguous empty tail.
+            # Broad bright neutral content is foreign to the dark bar background;
+            # narrow white counter glyphs must not trigger this rejection.
+            neutral_full=((saturation < 80) & (value > 100)).astype(np.uint8)
+            count,_,stats,_=cv2.connectedComponentsWithStats(neutral_full,8)
+            for x,y,w,h,area in stats[1:]:
+                if h >= image.shape[0]*.85 and w >= 4 and area >= image.shape[0]*3:
+                    return {'available':False,'reason':'neutral_overlay'}
+            neutral=(saturation[self.rows] < 45) & (value[self.rows] > 125)
+            if np.count_nonzero(neutral) > neutral.size*.10:
+                return {'available':False,'reason':'neutral_overlay'}
         if self.sidebar:
             hue,saturation,value=cv2.split(cv2.cvtColor(image,cv2.COLOR_BGR2HSV))
             # Sidebar fill is always red/blue. Green/yellow item pixels are
