@@ -93,7 +93,8 @@ def main():
                         top = saved[(case,resource)]['top']
                         side = saved[(case,resource)]['side']
                     else:
-                        top = recognize_top(engine,binary(prepare(image('top_original'),'dynamic')),args.resilient_verification)
+                        raw_top=image('top_original')
+                        top = recognize_top(engine,binary(prepare(raw_top,'dynamic')),args.resilient_verification,raw_crop=raw_top)
                         side = recognize_side(engine,image('side_original'),args.resilient_verification)
                     value = top['value']
                     agreement = value is not None and side['current'] == value['current']
@@ -105,6 +106,7 @@ def main():
                         stats['color_conflicts'] += int(checked.get('fill_status')=='conflict')
                     stats['top_glyph_recovered'] += int(top.get('method') == 'visual_separator_and_glyphs')
                     stats['side_glyph_recovered'] += int(side.get('method') == 'separate_glyphs')
+                    stats['top_ocr_skipped_occlusion'] += int(top.get('ocr_skipped',False))
                     stats['resource_samples'] += 1
                     stats['source_agreements'] += int(agreement)
                     selected = confirmed = None

@@ -86,7 +86,11 @@ def parse_reading(result):
             'leading_parenthesis_ignored':leading_parenthesis}
 
 
-def recognize_top(engine, image, glyph_retry=False):
+def recognize_top(engine, image, glyph_retry=False, raw_crop=None):
+    if glyph_retry and raw_crop is not None:
+        from text_occlusion import inspect_top_text,unavailable
+        evidence=inspect_top_text(raw_crop)
+        if evidence['occluded']:return unavailable(evidence)
     result = parse_reading(engine.recognize(image))
     if glyph_retry and result['value'] is None:
         recovery = recover_ratio(engine, image)
@@ -105,15 +109,18 @@ class Analyzer:
 
     def analyze(self,frame):
         start=time.perf_counter()
-        crops=[binary(prepare(crop_bar(frame,r),'dynamic')) for r in self.rectangles]
+        raw_crops=[crop_bar(frame,r) for r in self.rectangles]
+        from text_occlusion import inspect_top_text,unavailable
+        overlays=[inspect_top_text(c) if self.glyph_retry else {'occluded':False} for c in raw_crops]
+        crops=[None if e['occluded'] else binary(prepare(c,'dynamic')) for c,e in zip(raw_crops,overlays)]
         prepared=time.perf_counter()
-        results=[recognize_top(self.engine,c,self.glyph_retry) for c in crops]
+        results=[unavailable(e) if e['occluded'] else recognize_top(self.engine,c,self.glyph_retry) for c,e in zip(crops,overlays)]
         recognized=time.perf_counter()
         return {'readings':results,
                 'prepare_ms':(prepared-start)*1000,
                 'recognition_ms':(recognized-prepared)*1000,
                 'total_ms':(time.perf_counter()-start)*1000,
-                'crop_sizes':[(c.shape[1],c.shape[0]) for c in crops]}
+                'crop_sizes':[(c.shape[1],c.shape[0]) if c is not None else (0,0) for c in crops]}
 
 
 def main():
