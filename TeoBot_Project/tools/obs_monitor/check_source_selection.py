@@ -87,6 +87,15 @@ class Tests(unittest.TestCase):
         self.assertIsNone(strict.apply(r,1.)['value'])
         self.assertIsNone(strict.apply(r2,1.1)['value'])
 
+    def test_slow_confirmation_accepts_gap_and_long_interruption_resets(self):
+        gate=ConfirmationGate(max_gap=5.,allow_color_supported=True)
+        r=select_source(top(111),{'current':111},evidence(),195)
+        self.assertIsNone(gate.apply(r,1.)['value'])
+        self.assertEqual(gate.apply(r,1.5)['value']['current'],111)
+        self.assertEqual(gate.apply(r,4.)['value']['current'],111)
+        self.assertIsNone(gate.apply(r,9.1)['value'])
+        self.assertEqual(gate.apply(r,9.3)['value']['current'],111)
+
     def test_temporal_confirmation_resets_on_source_or_cached_maximum_change(self):
         gate=ConfirmationGate(allow_color_supported=True)
         r=select_source({'value':None},{'current':111},evidence(),195)

@@ -163,7 +163,7 @@ class DualAnalyzer:
         self.conflict_pending = False
         self.strict = strict
         self.resilient = resilient
-        self.confirmations = [ConfirmationGate(allow_color_supported=resilient) for _ in range(2)]
+        self.confirmations = [ConfirmationGate(max_gap=5. if resilient else .25, allow_color_supported=resilient) for _ in range(2)]
 
     def read_side(self, frame, index):
         x,y,w,h = self.boxes[index]

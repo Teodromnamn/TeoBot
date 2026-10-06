@@ -35,7 +35,7 @@ class Camera:
         self.error = None
         self.count = 0
         self.marked = None
-        self.detector, self.health = Detector(), Health()
+        self.detector, self.health = Detector(), Health(freeze_s=args.max_age_ms/1000)
         self.thread = threading.Thread(target=self.run, daemon=True)
 
     def run(self):
@@ -120,7 +120,7 @@ def result_status(marker_status, age, elapsed_ms, statuses):
     return 'OK'
 
 
-def publish(path, status, readings=None, age_ms=None, max_age_ms=250, bar_statuses=None):
+def publish(path, status, readings=None, age_ms=None, max_age_ms=5000, bar_statuses=None, slow_age_ms=250):
     """Publish each resource independently; retain history without refreshing it."""
     now_ms = time.time_ns() // 1000000
     fresh = (status in ('OK', 'BRAK_ODCZYTU', 'POTWIERDZANIE_MAKSIMUM', 'KONFLIKT_ZRODEL')
@@ -131,7 +131,9 @@ def publish(path, status, readings=None, age_ms=None, max_age_ms=250, bar_status
     except (OSError, ValueError):
         pass
     data = {'schema': 2, 'status': status, 'published_at_unix_ms': now_ms,
-            'result_age_ms': age_ms}
+            'result_age_ms': age_ms,
+            'slow_reading': age_ms is not None and age_ms > slow_age_ms,
+            'slow_warning_age_ms': slow_age_ms}
     resources = {}
     for index, name in enumerate(('hp', 'mp')):
         reading = readings[index] if readings else {}
@@ -145,6 +147,8 @@ def publish(path, status, readings=None, age_ms=None, max_age_ms=250, bar_status
             last_known = {'value': value, 'source': reading.get('source', 'top_text'),
                           'observed_at_unix_ms': now_ms-age_ms,
                           'expires_at_unix_ms': expires}
+        effective_maximum = (value.get('maximum') or value.get('last_confirmed_maximum')) if valid else None
+        effective_percent = 100*value['current']/effective_maximum if effective_maximum and valid else None
         resources[name] = {
             'valid': valid, 'quality': reading.get('quality', 'exact') if valid else ('stale' if last_known else 'unavailable'),
             'source': reading.get('source', 'top_text') if valid else None,
@@ -154,6 +158,8 @@ def publish(path, status, readings=None, age_ms=None, max_age_ms=250, bar_status
             'fill_status': reading.get('fill_status') if fresh else None,
             'fill': reading.get('fill') if fresh else None,
             'value': value if valid else None,
+            'effective_maximum':effective_maximum, 'effective_percent':effective_percent,
+            'maximum_is_cached':bool(valid and value.get('maximum') is None and effective_maximum),
             'reason': (bar_statuses[index] if fresh and bar_statuses else status),
             'observed_at_unix_ms': now_ms-age_ms if valid else None,
             'expires_at_unix_ms': expires,
@@ -291,10 +297,11 @@ def main():
     parser.add_argument('--height', type=int, default=1080)
     parser.add_argument('--fps', type=int, default=60)
     parser.add_argument('--preview', action='store_true')
-    parser.add_argument('--max-age-ms', type=int, default=250,
+    parser.add_argument('--max-age-ms', type=int, default=5000,
                         help='Maksymalny wiek wyniku liczony od znacznika OBS')
+    parser.add_argument('--slow-age-ms',type=int,default=250,help='Prog ostrzezenia o opoznieniu; nie uniewaznia wyniku')
     args = parser.parse_args()
-    if not np.isfinite(args.target_fps) or min(args.seconds, args.width, args.height, args.fps, args.target_fps, args.max_age_ms) <= 0:
+    if not np.isfinite(args.target_fps) or min(args.seconds, args.width, args.height, args.fps, args.target_fps, args.max_age_ms, args.slow_age_ms) <= 0:
         parser.error('Parametry liczbowe musza byc dodatnie')
     from rapidocr import RapidOCR
     from game.status_bar_detector import _tibia_top_pair
@@ -399,6 +406,13 @@ def main():
                 # Get newest frame AFTER pacing, never sleep holding an old frame.
                 item = camera.get_marked(seq)
                 if item is None:
+                    with camera.condition:
+                        last_frame = camera.marked
+                    if last_frame is not None and time.perf_counter()-last_frame[1] <= args.max_age_ms/1000:
+                        # Keep the existing observation/expiry; never refresh its age.
+                        continue
+                    if hasattr(hp_analyzer,'confirmations'):
+                        for gate in hp_analyzer.confirmations:gate.previous=None;gate.previous_verified_pair=False
                     publish(latest_path, 'BRAK_KLATEK')
                     events.append({'elapsed_s': time.perf_counter()-start, 'status': 'BRAK_KLATEK'})
                     print('BRAK_KLATEK: dane niewazne', flush=True)
@@ -407,6 +421,8 @@ def main():
                 analysis_start = time.perf_counter()
                 next_due = analysis_start + 1/args.target_fps
                 if marker_status != 'OK' or marker_age is None or marker_age < 0:
+                    if hasattr(hp_analyzer,'confirmations'):
+                        for gate in hp_analyzer.confirmations:gate.previous=None;gate.previous_verified_pair=False
                     for guard in guards:
                         guard.update(None)
                     publish(latest_path, marker_status if marker_status != 'OK' else 'ZEGAR_NIEZGODNY')
@@ -433,9 +449,11 @@ def main():
                     newest = camera.marked
                     if camera.error:
                         status = 'BLAD_KAMERY'
-                    elif newest is None or end-newest[1] > .5:
+                    elif newest is None or end-newest[1] > args.max_age_ms/1000:
                         status = 'BRAK_KLATEK'
-                publish(latest_path, status, readings, result_age, args.max_age_ms, statuses)
+                if status in ('WYNIK_ZBYT_STARY','BLAD_KAMERY','BRAK_KLATEK') and hasattr(hp_analyzer,'confirmations'):
+                    for gate in hp_analyzer.confirmations:gate.previous=None;gate.previous_verified_pair=False
+                publish(latest_path, status, readings, result_age, args.max_age_ms, statuses,args.slow_age_ms)
                 row = {'sequence': seq, 'elapsed_s': end-start,
                        'status': status, 'valid': status == 'OK',
                        'marker_age_ms': marker_age, 'result_age_ms': result_age,
@@ -485,7 +503,8 @@ def main():
                       'source_conflicts': sum(r['status'] == 'KONFLIKT_ZRODEL' for r in rows),
                       'valid_pairs': sum(r['valid'] for r in rows),
                       'result_age_ms': stats([r['result_age_ms'] for r in rows]),
-                      'max_age_ms': args.max_age_ms, 'invalid_events': len(events),
+                      'max_age_ms': args.max_age_ms, 'slow_age_ms':args.slow_age_ms,
+                      'slow_readings':sum(r['result_age_ms']>args.slow_age_ms for r in rows), 'invalid_events': len(events),
                       'tuning': tuning, 'preview': args.preview,
                       'duration_s': duration, 'baseline_fps': baseline,
                       'camera_fps': captured/duration, 'pairs_per_second': len(rows)/duration,

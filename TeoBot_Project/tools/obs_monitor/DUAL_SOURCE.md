@@ -258,3 +258,41 @@ previously uncorroborated top crops. Set `--directory` as usual when needed.
 Manual CSV evaluation now accepts current-only labels with blank maximum fields.
 Such labels evaluate current accuracy and do not validate maximum/percentage.
 Manual labels and user screenshots must stay outside the public repository.
+
+## Slow readings versus invalid observations
+
+The pipeline defaults to `--slow-age-ms 250 --max-age-ms 5000`. Age is measured
+from the OBS timestamp, including transmission/capture/processing, not just OCR.
+Crossing 250 ms sets `slow_reading` in latest.json and increments summary
+`slow_readings`; it does not invalidate a correct reading. The original
+observation time is preserved and expiry remains observation + 5000 ms.
+
+A short absence of new camera frames does not refresh or invalidate the last
+published observation; consumers must honor its expiry. After five seconds,
+missing/frozen frames or old results are rejected and temporal confirmation is
+reset. Camera errors, invalid timestamps/markers and explicit program stop are
+still invalid immediately. Recovery needs new confirmed observations before
+publication. Standalone marker tools retain their previous default threshold.
+
+Resilient confirmation allows up to five seconds between candidate observations.
+It still requires the same current for single-source readings, or two complete
+color-supported agreements for changing current. Strict mode retains its former
+250 ms identical-pair gate. These checks are separate from the processing-speed
+warning and from source/digit correctness.
+
+Resource output adds `effective_maximum`, `effective_percent` and
+`maximum_is_cached`. When maximum cannot be read, these fields use the last
+confirmed maximum for the bot/UI percentage. The directly observed `value.maximum`
+can remain null and is not relabeled as a measurement. A newly readable maximum
+still goes through its existing change-confirmation check.
+
+Next independent live/capture test:
+
+```bash
+python -X utf8 tools/obs_monitor/test_obs_tesseract.py --resilient-verification --seconds 180 --capture-dataset --capture-conflicts
+```
+
+Start with full visible HP/MP for calibration. During capture, exercise varying
+HP/MP and cover the top/sidebar separately. Also capture a genuine maximum
+change if possible. Inspect warnings, throughput, age and original images;
+zero conflicts or valid output alone does not measure independent accuracy.

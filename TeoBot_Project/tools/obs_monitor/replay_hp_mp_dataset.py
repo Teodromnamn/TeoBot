@@ -64,7 +64,7 @@ def main():
                         data=np.frombuffer(archive.read(f'{reference}/{resource}_{kind}.png'),np.uint8)
                         model_image=cv2.imdecode(data,cv2.IMREAD_COLOR)
                         models[resource][kind]=FillEvidence(model_image,resource,sidebar=kind=='side_bar')
-            gates = {r:ConfirmationGate(allow_color_supported=True) for r in ('hp','mp')}
+            gates = {r:ConfirmationGate(max_gap=5.,allow_color_supported=True) for r in ('hp','mp')}
             maximum_guards = {}
             if args.resilient_verification:
                 for resource in ('hp','mp'):

@@ -71,7 +71,8 @@ class Detector:
 
 
 class Health:
-    def __init__(self):
+    def __init__(self,freeze_s=.5):
+        self.freeze_s=freeze_s
         self.stamp=None
         self.changed=None
 
@@ -82,7 +83,7 @@ class Health:
             self.stamp=stamp
             self.changed=mono
         age=((wall_ms-stamp+2**31)%2**32)-2**31
-        if mono-self.changed>=.5:
+        if mono-self.changed>=self.freeze_s:
             return 'ZATRZYMANY',age
         if age < -50 or age > 60000:
             return 'SPRAWDZ_ZEGAR_LUB_STARY_OBRAZ',age
@@ -215,3 +216,4 @@ def main():
 
 if __name__=='__main__':
     main()
+

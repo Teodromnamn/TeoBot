@@ -53,6 +53,30 @@ class ReadingsTests(unittest.TestCase):
             self.assertEqual(data['resources']['mp']['quality'], 'stale')
             self.assertEqual(data['resources']['mp']['last_known'], saved)
 
+    def test_marker_freeze_uses_configured_interruption_threshold(self):
+        from test_obs_marker import Health
+        health=Health(freeze_s=5.)
+        self.assertEqual(health.update(1000,1000,0.,5000)[0],'OK')
+        self.assertEqual(health.update(1000,5900,4.9,5000)[0],'OK')
+        self.assertEqual(health.update(1000,6000,5.,5000)[0],'ZATRZYMANY')
+        self.assertEqual(health.update(6100,6100,5.1,5000)[0],'OK')
+
+    def test_slow_reading_is_valid_until_five_seconds_and_cached_max_is_explicit(self):
+        value={'current':111,'maximum':None,'last_confirmed_maximum':195}
+        with TemporaryDirectory() as folder:
+            path=Path(folder)/'latest.json'
+            publish(path,'OK',[{'value':value},{'value':value}],400)
+            data=json.loads(path.read_text())
+            self.assertTrue(data['valid'])
+            self.assertTrue(data['slow_reading'])
+            self.assertEqual(data['resources']['hp']['effective_maximum'],195)
+            self.assertTrue(data['resources']['hp']['maximum_is_cached'])
+            self.assertAlmostEqual(data['resources']['hp']['effective_percent'],100*111/195)
+            observed=data['resources']['hp']['observed_at_unix_ms']
+            self.assertEqual(data['resources']['hp']['expires_at_unix_ms']-observed,5000)
+            publish(path,'OK',[{'value':value},{'value':value}],5001)
+            self.assertFalse(json.loads(path.read_text())['valid'])
+
     def test_old_and_pending_are_not_current(self):
         value = self.parse('85/85')
         with TemporaryDirectory() as folder:
@@ -67,3 +91,4 @@ class ReadingsTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
