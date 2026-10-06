@@ -73,3 +73,15 @@ This prints old/new sidebar text and saved top text for comparison, not an
 accuracy score: saved OCR is not ground truth. Local validation covered 10
 conflict crops and 4 older sidebar crops, all read correctly. This small sample
 and a different Tesseract build do not establish live Windows accuracy.
+
+Sidebar acceptance also checks the number of separated ink groups against the
+number of OCR digits. A mismatch returns current=null with
+reason=digit_count_mismatch; it cannot supply a sidebar-only value. This is a
+conservative omission check, not proof that individual digits are correct.
+Broken or touching glyphs can affect grouping. Rejected count mismatches are
+included in opt-in conflict captures even when top text remains usable.
+No additional OCR calls are made by this check.
+
+Regression replay: 18 manually inspected reference crops, 17 correctly accepted
+and the known 111 -> 1 error rejected. Windows replay is required because OCR
+outputs differ between installed Tesseract builds.

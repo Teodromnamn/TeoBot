@@ -6,11 +6,17 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-from conflict_capture import ConflictCapture
+from conflict_capture import ConflictCapture, diagnostic_needed
 from test_obs_tesseract import binary
 
 
 class Tests(unittest.TestCase):
+    def test_rejected_side_reading_remains_diagnostic(self):
+        self.assertTrue(diagnostic_needed({'verification':'side_unreadable',
+                                          'side':{'reason':'digit_count_mismatch'}}))
+        self.assertFalse(diagnostic_needed({'verification':'side_unreadable',
+                                           'side':{'reason':'unreadable'}}))
+
     def test_limits_same_frame_crops_and_archive(self):
         now=[0.]
         frame=np.full((50,80,3),170,dtype=np.uint8)

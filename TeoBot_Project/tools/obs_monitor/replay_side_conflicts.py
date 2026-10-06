@@ -8,7 +8,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-from dual_source import side_image
+from dual_source import recognize_side
 from test_obs_tesseract import Engine
 
 
@@ -36,12 +36,14 @@ def main():
                     if crop is None:
                         raise ValueError(f'Cannot decode {folder}/{resource}')
                     start = time.perf_counter()
-                    raw = engine.recognize(side_image(crop), psm=8).txts[0]
+                    result = recognize_side(engine, crop)
                     elapsed = (time.perf_counter()-start)*1000
                     saved = meta['analysis']['readings'][index]
                     print(json.dumps({'case':folder, 'resource':resource,
                                       'old_side':saved.get('side', {}).get('raw'),
-                                      'new_side':raw, 'saved_top':saved.get('raw'),
+                                      'new_side':result['raw'], 'current':result['current'],
+                                      'visible_digit_groups':result['visible_digit_groups'],
+                                      'reason':result.get('reason'), 'saved_top':saved.get('raw'),
                                       'ms':round(elapsed, 2)}, ensure_ascii=False))
     finally:
         engine.tess.close()

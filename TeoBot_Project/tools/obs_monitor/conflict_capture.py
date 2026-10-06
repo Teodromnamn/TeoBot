@@ -9,6 +9,11 @@ from benchmark_hp_mp import crop_bar, prepare
 from dual_source import side_image
 
 
+def diagnostic_needed(reading):
+    return (reading.get('verification') == 'conflict' or
+            (reading.get('side') or {}).get('reason') == 'digit_count_mismatch')
+
+
 class ConflictCapture:
     def __init__(self, folder, limit=60, clock=time.perf_counter):
         self.folder = Path(folder)
@@ -23,14 +28,14 @@ class ConflictCapture:
     def capture(self, frame, analysis, top_boxes, side_boxes, binary):
         now = self.clock()
         readings = analysis['readings']
-        if not any(r.get('verification') == 'conflict' for r in readings):
+        if not any(diagnostic_needed(r) for r in readings):
             return False
         if self.error or self.count >= self.limit or now-self.last < .5:
             return False
         # Two examples of each raw disagreement, at least five seconds apart.
         signature = json.dumps([(i, r.get('raw'), r.get('side', {}).get('raw'))
                                 for i,r in enumerate(readings)
-                                if r.get('verification') == 'conflict'], sort_keys=True)
+                                if diagnostic_needed(r)], sort_keys=True)
         occurrences, last = self.seen.get(signature, (0, float('-inf')))
         if occurrences >= 2 or now-last < 5:
             return False
@@ -53,7 +58,7 @@ class ConflictCapture:
                         'elapsed_s':now-self.started, 'frame_shape':list(frame.shape),
                         'top_rectangles':top_boxes, 'side_rectangles':side_boxes,
                         'analysis':analysis,
-                        'side_preprocessing':'tight_cubic4_threshold120_border16_psm8',
+                        'side_preprocessing':'tight_cubic4_threshold120_border16_psm8_digit_count',
                         'note':'Both sources from one analyzed frame. Preprocessing replayed deterministically; no extra OCR. Readings are not ground-truth labels.'}
             (case/'reading.json').write_text(json.dumps(metadata, indent=2), encoding='utf-8')
         except (OSError, ValueError, cv2.error) as error:

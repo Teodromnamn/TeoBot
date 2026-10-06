@@ -21,6 +21,25 @@ def side_image(crop):
     return cv2.copyMakeBorder(binary, 16, 16, 16, 16, cv2.BORDER_CONSTANT, value=255)
 
 
+def recognize_side(engine, crop):
+    """Require one OCR digit per separated ink group; never infer omitted digits."""
+    image = side_image(crop)
+    columns = np.any(image < 128, axis=0)
+    transitions = np.diff(np.r_[False, columns, False].astype(np.int8))
+    count = int(np.count_nonzero(transitions == 1))
+    raw = engine.recognize(image, psm=8).txts[0].strip()
+    result = {'raw': raw, 'current': None, 'visible_digit_groups': count}
+    if not re.fullmatch(r'[0-9]+', raw):
+        result['reason'] = 'unreadable'
+    elif not count or len(raw) != count:
+        # Split/broken glyphs may also cause rejection. Prefer unavailable data
+        # over silently accepting a shortened number while the top is covered.
+        result['reason'] = 'digit_count_mismatch'
+    else:
+        result['current'] = int(raw)
+    return result
+
+
 def combine(top, side, checked, cached_maximum=None):
     """side is this frame's reading or None. A cached maximum is never exact."""
     result = dict(top)
@@ -63,10 +82,7 @@ class DualAnalyzer:
 
     def read_side(self, frame, index):
         x,y,w,h = self.boxes[index]
-        image = side_image(frame[y:y+h, x:x+w])
-        result = self.engine.recognize(image, psm=8)
-        raw = result.txts[0].strip()
-        return {'raw': raw, 'current': int(raw) if re.fullmatch(r'[0-9]+', raw) else None}
+        return recognize_side(self.engine, frame[y:y+h, x:x+w])
 
     def calibrate(self, frame, readings, guards):
         self.boxes, bars = locate(frame, return_bars=True)
