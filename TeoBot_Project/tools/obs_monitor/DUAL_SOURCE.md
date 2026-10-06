@@ -300,3 +300,11 @@ zero conflicts or valid output alone does not measure independent accuracy.
 Repeated supported current values retain temporal confirmation across top/sidebar provenance changes when the effective maximum is unchanged. A new agreeing top/sidebar pair supported by color may confirm a changed current following a supported candidate. Changing single-counter readings, changed effective maxima, unsupported observations, and interruptions still require a fresh confirmation.
 
 Top bar color evidence rejects broad bright neutral tooltips and neutral components spanning almost the full bar height (cursor at fill edge). Covered color evidence is unavailable, never interpreted as a lower resource value. Sidebar OCR plus remaining visible color can still supply current using cached maximum.
+
+Windows live tests monitor one top-level window with title prefix `Tibia` by default (`--game-window-title` overrides it). Read-only user32 enumeration, visibility, minimization and foreground queries; no hooks, process memory or input. Missing/hidden/minimized/ambiguous/API-error states invalidate latest results and reset temporal candidates. Foreground inactivity alone does not block. On restore wait one second, discard pending frames, then require fresh temporal confirmation. Check before and after OCR; detection latency includes an in-flight OCR call. This does not prove game-frame freshness for every renderer/OBS stall while the window remains visible. On non-Windows platforms monitoring is unavailable.
+
+Windows smoke/performance test without dataset capture:
+```bash
+/c/_MS/GIT/TeoBot_OCR_venv/Scripts/python.exe -X utf8 tools/obs_monitor/test_obs_tesseract.py --resilient-verification --seconds 180 --game-window-title "Tibia"
+```
+Minimize for 3 seconds, restore, switch foreground to another window while keeping the client visible, then inspect latest.json and events.

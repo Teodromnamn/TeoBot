@@ -120,7 +120,7 @@ def result_status(marker_status, age, elapsed_ms, statuses):
     return 'OK'
 
 
-def publish(path, status, readings=None, age_ms=None, max_age_ms=5000, bar_statuses=None, slow_age_ms=250):
+def publish(path, status, readings=None, age_ms=None, max_age_ms=5000, bar_statuses=None, slow_age_ms=250, window_state=None):
     """Publish each resource independently; retain history without refreshing it."""
     now_ms = time.time_ns() // 1000000
     fresh = (status in ('OK', 'BRAK_ODCZYTU', 'POTWIERDZANIE_MAKSIMUM', 'KONFLIKT_ZRODEL')
@@ -133,7 +133,7 @@ def publish(path, status, readings=None, age_ms=None, max_age_ms=5000, bar_statu
     data = {'schema': 2, 'status': status, 'published_at_unix_ms': now_ms,
             'result_age_ms': age_ms,
             'slow_reading': age_ms is not None and age_ms > slow_age_ms,
-            'slow_warning_age_ms': slow_age_ms}
+            'slow_warning_age_ms': slow_age_ms, 'game_window':window_state}
     resources = {}
     for index, name in enumerate(('hp', 'mp')):
         reading = readings[index] if readings else {}
@@ -300,7 +300,11 @@ def main():
     parser.add_argument('--max-age-ms', type=int, default=5000,
                         help='Maksymalny wiek wyniku liczony od znacznika OBS')
     parser.add_argument('--slow-age-ms',type=int,default=250,help='Prog ostrzezenia o opoznieniu; nie uniewaznia wyniku')
+    parser.add_argument('--game-window-title',default='Tibia',help='Poczatek tytulu monitorowanego okna Windows')
     args = parser.parse_args()
+    from window_state import WindowGuard
+    window_guard=WindowGuard(args.game_window_title)
+    if not args.game_window_title.strip():parser.error('Tytul okna nie moze byc pusty')
     if not np.isfinite(args.target_fps) or min(args.seconds, args.width, args.height, args.fps, args.target_fps, args.max_age_ms, args.slow_age_ms) <= 0:
         parser.error('Parametry liczbowe musza byc dodatnie')
     from rapidocr import RapidOCR
@@ -403,6 +407,19 @@ def main():
                     time.sleep(delay)
                 if time.perf_counter()-start >= args.seconds:
                     break
+                window_state=window_guard.check()
+                if window_state['status'] != 'OK':
+                    if hasattr(hp_analyzer,'confirmations'):
+                        for gate in hp_analyzer.confirmations:
+                            gate.previous=None;gate.previous_verified_pair=False
+                    publish(latest_path,window_state['status'],window_state=window_state)
+                    if time.perf_counter()-log_time >= 1:
+                        print(window_state['status']+': dane niewazne',flush=True)
+                        events.append({'elapsed_s':time.perf_counter()-start,'status':window_state['status']})
+                        log_time=time.perf_counter()
+                    next_due=time.perf_counter()+.1
+                    seq,_,_=camera.get()
+                    continue
                 # Get newest frame AFTER pacing, never sleep holding an old frame.
                 item = camera.get_marked(seq)
                 if item is None:
@@ -453,9 +470,16 @@ def main():
                         status = 'BRAK_KLATEK'
                 if status in ('WYNIK_ZBYT_STARY','BLAD_KAMERY','BRAK_KLATEK') and hasattr(hp_analyzer,'confirmations'):
                     for gate in hp_analyzer.confirmations:gate.previous=None;gate.previous_verified_pair=False
-                publish(latest_path, status, readings, result_age, args.max_age_ms, statuses,args.slow_age_ms)
+                window_state=window_guard.check()
+                if window_state['status'] != 'OK':
+                    status=window_state['status']
+                    if hasattr(hp_analyzer,'confirmations'):
+                        for gate in hp_analyzer.confirmations:
+                            gate.previous=None;gate.previous_verified_pair=False
+                publish(latest_path, status, readings, result_age, args.max_age_ms, statuses,args.slow_age_ms,window_state)
                 row = {'sequence': seq, 'elapsed_s': end-start,
                        'status': status, 'valid': status == 'OK',
+                       'game_window_active':window_state['active'],
                        'marker_age_ms': marker_age, 'result_age_ms': result_age,
                        'marker_ms': camera.marker_ms,
                        'prepare_ms': analysis['prepare_ms'],
