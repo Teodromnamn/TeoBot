@@ -96,16 +96,31 @@ class Tests(unittest.TestCase):
         self.assertIsNone(gate.apply(r,9.1)['value'])
         self.assertEqual(gate.apply(r,9.3)['value']['current'],111)
 
-    def test_temporal_confirmation_resets_on_source_or_cached_maximum_change(self):
+    def test_temporal_confirmation_preserves_same_current_across_source_change(self):
         gate=ConfirmationGate(allow_color_supported=True)
         r=select_source({'value':None},{'current':111},evidence(),195)
         self.assertIsNone(gate.apply(r,1.)['value'])
         self.assertEqual(gate.apply(r,1.1)['value']['current'],111)
         switched=select_source(top(111),{'current':None},evidence(),195)
-        self.assertIsNone(gate.apply(switched,1.2)['value'])
+        self.assertEqual(gate.apply(switched,1.2)['value']['current'],111)
         self.assertEqual(gate.apply(switched,1.3)['value']['current'],111)
         self.assertIsNone(gate.apply(dict(switched,value=None),1.4)['value'])
         self.assertIsNone(gate.apply(switched,1.5)['value'])
 
 
 if __name__=='__main__':unittest.main()
+
+class TransitionTests(unittest.TestCase):
+    def test_pair_confirms_change_after_single_source(self):
+        gate=ConfirmationGate(max_gap=5.,allow_color_supported=True)
+        side=select_source({'value':None},{'current':111},evidence(),195)
+        self.assertIsNone(gate.apply(side,1.)['value'])
+        pair=select_source(top(110),{'current':110},evidence(),195)
+        self.assertEqual(gate.apply(pair,1.1)['value']['current'],110)
+
+    def test_changed_maximum_still_waits(self):
+        gate=ConfirmationGate(max_gap=5.,allow_color_supported=True)
+        r=select_source(top(111),{'current':111},evidence(),195)
+        gate.apply(r,1.)
+        changed=dict(r,value=dict(r['value'],maximum=196))
+        self.assertIsNone(gate.apply(changed,1.1)['value'])

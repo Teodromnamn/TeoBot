@@ -124,15 +124,21 @@ class ConfirmationGate:
                reading.get('source') if self.allow_color_supported else None,
                value.get('last_confirmed_maximum') if self.allow_color_supported else None)
         previous = self.previous
-        previous_pair = self.previous_verified_pair
         verified_pair = (reading.get('verification') == 'current_agrees'
                          and reading.get('fill_status') == 'consistent')
         self.previous = (key, now)
         self.previous_verified_pair = verified_pair
-        trusted_change = (self.allow_color_supported and previous and previous_pair and verified_pair
-                          and previous[0][1:] == key[1:])
-        if previous and (previous[0] == key or trusted_change) and 0 < now-previous[1] <= self.max_gap:
-            result['confirmation'] = ('two_frames_agree' if previous[0] == key
+        def effective_maximum(candidate):
+            return candidate[1] if candidate[1] is not None else candidate[3]
+        same_maximum = bool(previous and effective_maximum(previous[0]) == effective_maximum(key))
+        # Provenance changes do not invalidate a repeated, independently supported current.
+        stable_current = bool(self.allow_color_supported and previous and same_maximum
+                              and previous[0][0] == key[0])
+        # A changing single-counter reading still needs repetition. A new full pair
+        # plus color can confirm a change following an already supported candidate.
+        trusted_change = (self.allow_color_supported and previous and verified_pair and same_maximum)
+        if previous and (previous[0] == key or stable_current or trusted_change) and 0 < now-previous[1] <= self.max_gap:
+            result['confirmation'] = ('two_frames_agree' if previous[0][0] == key[0]
                                       else 'two_frames_consistent_change')
         else:
             if previous is None:
