@@ -13,7 +13,7 @@ import numpy as np
 from benchmark_hp_mp import prepare
 from dual_source import recognize_side, ConfirmationGate
 from test_obs_tesseract import Engine, binary, recognize_top
-from source_selection import select_source
+from source_selection import select_source,needs_glyph_check,corroborate_top
 from test_obs_pipeline import ConfirmMaximum
 from bar_fill import FillEvidence, validate_fill
 
@@ -111,6 +111,9 @@ def main():
                         evidence = {('top' if kind=='top_original' else 'sidebar'):e
                                     for kind,e in checked['fill'].items()}
                         guard = maximum_guards[resource]
+                        if needs_glyph_check(top,side,evidence,guard.maximum):
+                            if engine is None:engine=Engine(args.directory)
+                            top=corroborate_top(engine,top,binary(prepare(image('top_original'),'dynamic')))
                         selected = select_source(top,side,evidence,guard.maximum)
                         confirmed = gates[resource].apply(selected,observed_at)
                         maximum_status = guard.update(confirmed['value'])
@@ -121,21 +124,26 @@ def main():
                             stats['wait_'+confirmed['confirmation_reset_reason']] += 1
                         stats['selected_resources'] += int(selected['value'] is not None)
                         stats['confirmed_resources'] += int(confirmed['value'] is not None)
-                        stats['single_source_selected'] += int(selected.get('verification') in ('top_color_supported','side_color_supported'))
+                        stats['single_source_selected'] += int(selected.get('verification') in ('top_color_supported','side_color_supported','top_glyphs_supported_without_color'))
                     row = labels.get(case,{})
                     truth = [row.get(resource+'_current',''),row.get(resource+'_maximum','')]
                     correct = None
                     color_accepted = agreement and checked is not None and checked.get('value') is not None
-                    if all(v.strip() for v in truth):
-                        current, maximum = map(int,truth)
+                    if truth[0].strip():
+                        current=int(truth[0]);maximum=int(truth[1]) if truth[1].strip() else None
                         stats['manually_labeled'] += 1
+                        if selected is not None and selected['value'] is not None:
+                            stats['labeled_selected'] += 1
+                            stats['wrong_labeled_selected_current'] += int(selected['value']['current'] != current)
                         if confirmed is not None and confirmed['value'] is not None:
                             cv = confirmed['value']
                             stats['labeled_confirmed'] += 1
                             stats['wrong_labeled_confirmed_current'] += int(cv['current'] != current)
-                            stats['wrong_labeled_confirmed_maximum'] += int(cv.get('maximum') is not None and cv['maximum'] != maximum)
+                            if maximum is not None and cv.get('maximum') is not None:
+                                stats['labeled_confirmed_maximum'] += 1
+                                stats['wrong_labeled_confirmed_maximum'] += int(cv['maximum'] != maximum)
                         if agreement:
-                            correct = value['current']==current and value['maximum']==maximum
+                            correct = value['current']==current and (maximum is None or value['maximum']==maximum)
                             stats['labeled_agreements'] += 1
                             stats['correct_labeled_agreements'] += int(correct)
                             stats['wrong_labeled_agreements'] += int(not correct)

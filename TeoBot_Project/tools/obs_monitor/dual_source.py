@@ -5,10 +5,10 @@ import time
 import cv2
 import numpy as np
 from test_side_counters import locate
-from benchmark_hp_mp import crop_bar
+from benchmark_hp_mp import crop_bar, prepare
 from bar_fill import FillEvidence, validate_fill
 from glyph_ocr import read_digits
-from source_selection import select_source
+from source_selection import select_source, needs_glyph_check, corroborate_top
 
 
 def side_image(crop):
@@ -28,6 +28,14 @@ def side_image(crop):
 def recognize_side(engine, crop, glyph_retry=False):
     """Require one OCR digit per separated ink group; never infer omitted digits."""
     image = side_image(crop)
+    if glyph_retry:
+        ink=(image<128).astype(np.uint8)
+        count_components,component_labels,stats,_=cv2.connectedComponentsWithStats(ink,8)
+        substantial=any(st[cv2.CC_STAT_HEIGHT]>=12 for st in stats[1:])
+        if substantial:
+            for index,st in enumerate(stats[1:],1):
+                if st[cv2.CC_STAT_AREA]<=8 and st[cv2.CC_STAT_HEIGHT]<=3 and st[cv2.CC_STAT_WIDTH]<=3:
+                    image[component_labels==index]=255
     columns = np.any(image < 128, axis=0)
     transitions = np.diff(np.r_[False, columns, False].astype(np.int8))
     count = int(np.count_nonzero(transitions == 1))
@@ -104,7 +112,7 @@ class ConfirmationGate:
         if self.allow_color_supported:
             supported = (reading.get('verification') in ('current_agrees','top_color_supported','side_color_supported')
                          and reading.get('fill_status') == 'consistent')
-            supported = supported or (reading.get('verification') == 'current_agrees_without_color'
+            supported = supported or (reading.get('verification') in ('current_agrees_without_color','top_glyphs_supported_without_color')
                                       and reading.get('fill_status') == 'unavailable')
         if not supported or value is None:
             self.previous = None
@@ -223,8 +231,12 @@ class DualAnalyzer:
                 'sidebar':self.fill_models[i]['sidebar'].measure(crop_bar(frame,self.side_bars[i]))}
                 for i in range(2)]
             if self.resilient:
-                combined = [select_source(r,s,e,g.maximum)
-                            for r,s,e,g in zip(readings,side,evidence,self.guards)]
+                combined=[]
+                from test_obs_tesseract import binary
+                for i,(r,s,e,g) in enumerate(zip(readings,side,evidence,self.guards)):
+                    if needs_glyph_check(r,s,e,g.maximum):
+                        r=corroborate_top(self.engine,r,binary(prepare(crop_bar(frame,self.top.rectangles[i]),'dynamic')))
+                    combined.append(select_source(r,s,e,g.maximum))
             else:
                 combined = [validate_fill(r,e) for r,e in zip(combined,evidence)]
             now = self.clock()

@@ -55,6 +55,21 @@ class Tests(unittest.TestCase):
         e['top']={'available':True,'lower_percent':0,'upper_percent':2}
         self.assertIsNone(select_source(top(35,150),{'current':35},e,150)['value'])
 
+    def test_glyph_corroborated_top_without_bar_requires_known_maximum_and_stability(self):
+        ev={'top':{'available':False,'reason':'noncontiguous_or_occluded'},
+            'sidebar':{'available':False,'reason':'foreign_color_overlay'}}
+        t=top(9,150);side={'current':None,'reason':'foreign_color_overlay'}
+        self.assertIsNone(select_source(t,side,ev,150)['value'])
+        t['glyph_corroborated']=True
+        result=select_source(t,side,ev,150)
+        self.assertEqual(result['value']['current'],9)
+        gate=ConfirmationGate(allow_color_supported=True)
+        self.assertIsNone(gate.apply(result,1.)['value'])
+        self.assertEqual(gate.apply(result,1.1)['value']['current'],9)
+        self.assertIsNone(select_source(t,side,ev,151)['value'])
+        ev['top']={'available':True,'lower_percent':70,'upper_percent':80}
+        self.assertIsNone(select_source(t,side,ev,150)['value'])
+
     def test_changing_current_requires_two_full_color_supported_pairs(self):
         gate=ConfirmationGate(allow_color_supported=True)
         r=select_source(top(111),{'current':111},evidence(),195)

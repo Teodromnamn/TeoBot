@@ -236,3 +236,25 @@ coverage is checked, but legacy JSONL files contain no image fingerprint to
 prove recording identity. Saved observations remain untrusted OCR, not labels.
 This mode reruns color and decision logic on the original images; glyph OCR is
 reused. Do not use the same path for the input and redirected output.
+
+## Unavailable-color single-counter corroboration
+
+Resilient mode removes only tiny isolated sidebar specks (at most 3x3 pixels,
+area <=8 after scaling), and only in the presence of substantial glyphs. This
+prevents a subpixel UI artifact from adding a fake digit group.
+
+When both fill intervals are unavailable, one has explicit foreign-color
+occlusion, the sidebar counter is rejected, and the top maximum matches the
+last confirmed maximum, top text can undergo additional geometric slash and
+separate-glyph recognition. Only an exactly matching recovered ratio can become
+`top_glyphs_supported_without_color`. Two fresh identical candidates are still
+required. A present conflicting bar, new maximum, failed corroboration or a
+readable disagreeing sidebar does not enter this path. Existing strict mode
+is unchanged. This is additional checking of the SAME image and Tesseract
+model, not independent ground truth; shared errors remain possible.
+
+`--saved-ocr` normally reuses OCR, but this new path lazily starts Tesseract for
+previously uncorroborated top crops. Set `--directory` as usual when needed.
+Manual CSV evaluation now accepts current-only labels with blank maximum fields.
+Such labels evaluate current accuracy and do not validate maximum/percentage.
+Manual labels and user screenshots must stay outside the public repository.

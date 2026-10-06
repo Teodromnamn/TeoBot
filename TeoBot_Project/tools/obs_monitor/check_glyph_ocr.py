@@ -1,6 +1,6 @@
 import unittest
 from types import SimpleNamespace
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 import cv2
 import numpy as np
 from glyph_ocr import read_digits,is_slash,recover_ratio
@@ -21,6 +21,14 @@ class Tests(unittest.TestCase):
         r=recognize_side(e,crop,glyph_retry=True)
         self.assertEqual(r['current'],111)
         self.assertEqual(r['raw'],'1')
+
+    def test_subpixel_speck_does_not_add_digit_group(self):
+        image=self.image();image[5:25,35:38]=255;image[1:3,1:3]=0
+        e=Mock();e.recognize.return_value=SimpleNamespace(txts=['93'])
+        with patch('dual_source.side_image',return_value=image):
+            r=recognize_side(e,np.zeros((15,54,3),np.uint8),glyph_retry=True)
+        self.assertEqual(r['visible_digit_groups'],2)
+        self.assertEqual(r['current'],93)
 
     def test_colored_item_edges_cannot_be_recovered_as_digits(self):
         crop=np.repeat((255-self.image())[:,:,None],3,axis=2)

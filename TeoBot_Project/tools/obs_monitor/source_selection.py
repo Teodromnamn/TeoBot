@@ -31,6 +31,10 @@ def select_source(top, side, evidence, cached_maximum):
         result.update(value=tv,source='top_and_side_text',quality='exact',
                       verification='current_agrees_without_color',fill_status='unavailable')
         return result
+    if needs_glyph_check(top,side,evidence,cached_maximum) and top.get('glyph_corroborated'):
+        result.update(value=tv,source='top_text',quality='exact',
+                      verification='top_glyphs_supported_without_color',fill_status='unavailable')
+        return result
     if top_ok and side_ok and tv['current'] != sc:
         result['verification']='conflict'
         return result
@@ -46,3 +50,21 @@ def select_source(top, side, evidence, cached_maximum):
                       source='side_text',quality='current_only',
                       verification='side_color_supported',fill_status='consistent')
     return result
+
+
+def needs_glyph_check(top,side,evidence,cached_maximum):
+    value=top.get('value')
+    return bool(value is not None and cached_maximum is not None
+                and value['maximum']==cached_maximum
+                and 0 <= value['current'] <= cached_maximum
+                and side.get('current') is None
+                and not any(e.get('available') for e in evidence.values())
+                and any(e.get('reason')=='foreign_color_overlay' for e in evidence.values()))
+
+
+def corroborate_top(engine,top,image):
+    from glyph_ocr import recover_ratio
+    recovery=recover_ratio(engine,image)
+    value=top['value']
+    return dict(top,glyph_corroboration=recovery,
+                glyph_corroborated=recovery['text']==f"{value['current']}/{value['maximum']}")
