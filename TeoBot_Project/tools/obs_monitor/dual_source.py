@@ -8,10 +8,17 @@ from test_side_counters import locate
 
 
 def side_image(crop):
+    """Tight whole-number crop; keep every bright component, not a fixed digit count."""
+    if crop.size == 0:
+        return np.full((32, 32), 255, dtype=np.uint8)
     gray = crop.min(axis=2)
-    large = cv2.resize(gray, None, fx=3, fy=3, interpolation=cv2.INTER_CUBIC)
-    binary = np.where(large > 100, 0, 255).astype('uint8')
-    return cv2.copyMakeBorder(binary, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value=255)
+    large = cv2.resize(gray, None, fx=4, fy=4, interpolation=cv2.INTER_CUBIC)
+    y, x = np.where(large > 140)
+    if not len(x):
+        return np.full((32, 32), 255, dtype=np.uint8)
+    binary = np.where(large > 120, 0, 255).astype('uint8')
+    binary = binary[y.min():y.max()+1, x.min():x.max()+1]
+    return cv2.copyMakeBorder(binary, 16, 16, 16, 16, cv2.BORDER_CONSTANT, value=255)
 
 
 def combine(top, side, checked, cached_maximum=None):
@@ -57,7 +64,7 @@ class DualAnalyzer:
     def read_side(self, frame, index):
         x,y,w,h = self.boxes[index]
         image = side_image(frame[y:y+h, x:x+w])
-        result = self.engine.recognize(image)
+        result = self.engine.recognize(image, psm=8)
         raw = result.txts[0].strip()
         return {'raw': raw, 'current': int(raw) if re.fullmatch(r'[0-9]+', raw) else None}
 

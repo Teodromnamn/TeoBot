@@ -57,3 +57,19 @@ between duplicates and 0.5 seconds globally. Capture is opt-in and synchronous;
 its cost is included in end-to-end analysis time and expiry checks. A storage
 failure disables capture and leaves OCR running. No diagnostic mode changes the
 recognition or conflict resolution rules.
+
+Sidebar OCR now uses a tight crop around all pixels above 140 after 4x cubic
+scaling, threshold 120, a 16-pixel white border, and Tesseract single-word mode
+(PSM 8). The top-bar path remains PSM 7; the engine restores it after each call.
+No digits are inferred from the other source. Captures record the processor ID.
+
+Replay conflict originals on the installed Tesseract without OBS:
+
+```bash
+python tools/obs_monitor/replay_side_conflicts.py ocr_conflicts_TIMESTAMP.zip
+```
+
+This prints old/new sidebar text and saved top text for comparison, not an
+accuracy score: saved OCR is not ground truth. Local validation covered 10
+conflict crops and 4 older sidebar crops, all read correctly. This small sample
+and a different Tesseract build do not establish live Windows accuracy.

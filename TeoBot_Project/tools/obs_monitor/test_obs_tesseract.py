@@ -34,11 +34,12 @@ class Engine:
         self.mean_conf.restype=C.c_int
         self.mean_conf.argtypes=[C.c_void_p]
 
-    def recognize(self,image):
+    def recognize(self,image,psm=7):
         image=np.ascontiguousarray(image,dtype=np.uint8)
         h,w=image.shape
         t=self.tess
         try:
+            t.psm(t.api,psm)
             t.set_image(t.api,image.ctypes.data,w,h,1,image.strides[0])
             if t.recognize(t.api,None):raise RuntimeError('Tesseract recognition failed')
             pointer=t.get_text(t.api)
@@ -51,6 +52,7 @@ class Engine:
         finally:
             t.clear(t.api)
             t.clear_adaptive(t.api)
+            t.psm(t.api,7)
 
     def __call__(self,image,**kwargs):
         return self.recognize(binary(image))
@@ -152,4 +154,3 @@ def main():
 if __name__=='__main__':
     try:main()
     except KeyboardInterrupt:print('Przerwano.')
-

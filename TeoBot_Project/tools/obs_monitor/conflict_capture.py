@@ -53,6 +53,7 @@ class ConflictCapture:
                         'elapsed_s':now-self.started, 'frame_shape':list(frame.shape),
                         'top_rectangles':top_boxes, 'side_rectangles':side_boxes,
                         'analysis':analysis,
+                        'side_preprocessing':'tight_cubic4_threshold120_border16_psm8',
                         'note':'Both sources from one analyzed frame. Preprocessing replayed deterministically; no extra OCR. Readings are not ground-truth labels.'}
             (case/'reading.json').write_text(json.dumps(metadata, indent=2), encoding='utf-8')
         except (OSError, ValueError, cv2.error) as error:
