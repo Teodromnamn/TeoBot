@@ -85,3 +85,36 @@ No additional OCR calls are made by this check.
 Regression replay: 18 manually inspected reference crops, 17 correctly accepted
 and the known 111 -> 1 error rejected. Windows replay is required because OCR
 outputs differ between installed Tesseract builds.
+
+Accuracy-first diagnostics:
+
+```bash
+python tools/obs_monitor/test_obs_tesseract.py --strict-verification --capture-dataset --capture-conflicts --seconds 180
+```
+
+Strict verification forces sidebar OCR on every analyzed frame and only exposes
+an exact value after two consecutive frames agree across both sources on the
+same current AND top maximum, separated by at most 250 ms. Any missing source,
+conflict, value change or longer gap resets confirmation. This is not a guarantee
+of correctness: both OCR paths use Tesseract and can share errors. Color fill
+verification is not implemented by this flag. Covered top bars cannot produce a
+confirmed strict value even if sidebar digits are readable.
+
+Dataset capture samples analyzed frames at up to 5/s, capped at 2000. It stores
+raw lossless top strips, sidebar counters, sidebar colored bars, nearby sidebar
+context and same-frame analysis metadata. Sampling follows actual processing
+cadence, not guaranteed fixed-rate video; the extra disk work affects latency.
+Each ZIP contains blank labels.csv for independent manual truth labels. No
+saved OCR values are copied into labels. Keep UI layout fixed after calibration.
+
+Offline replay without OBS:
+
+```bash
+python tools/obs_monitor/replay_hp_mp_dataset.py ocr_dataset_TIMESTAMP.zip > replay.jsonl
+python tools/obs_monitor/replay_hp_mp_dataset.py ocr_dataset_TIMESTAMP.zip --labels labels.csv > labeled_replay.jsonl
+```
+
+Replay reports source agreements and errors against filled manual labels.
+Blank labels are excluded from accuracy counts; agreements without truth labels
+are not accuracy. It does not simulate live expiry, temporal confirmation or
+actions. All screenshots and labels remain outside the repository.

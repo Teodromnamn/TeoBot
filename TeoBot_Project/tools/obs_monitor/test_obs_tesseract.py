@@ -102,24 +102,34 @@ def main():
     parser.add_argument('--directory',default=r'C:\Program Files\Tesseract-OCR')
     parser.add_argument('--verify-side', action='store_true', help='Porownuj boczne liczniki 2/s na tej samej klatce')
     parser.add_argument('--capture-conflicts', action='store_true', help='Zapisz ograniczona paczke wycinkow przy konflikcie (wymaga --verify-side)')
+    parser.add_argument('--capture-dataset', action='store_true', help='Zapisuj surowe wycinki obu zrodel i paskow do ZIP, 5/s, maks. 2000 probek')
+    parser.add_argument('--strict-verification', action='store_true', help='Wymagaj zgodnosci obu OCR w kazdej klatce i dwoch kolejnych zgodnych par')
     parser.add_argument('--threads',type=int,choices=[1,2,4],default=2)
     args,remaining=parser.parse_known_args()
+    if args.capture_dataset or args.strict_verification:
+        args.verify_side = True
     if args.capture_conflicts and not args.verify_side:
         parser.error('--capture-conflicts wymaga --verify-side')
     if '--retune' in remaining:
         raise SystemExit('Ten test Tesseracta nie uzywa Auto. Ustaw --threads 1, 2 lub 4.')
     if '--help' in remaining or '-h' in remaining:
-        print(__doc__+'\nDodatkowo: --directory SCIEZKA, --threads 1|2|4. Opcje pipeline:')
+        print(__doc__+'\nDodatkowo: --directory SCIEZKA, --threads 1|2|4, --verify-side, '
+              '--strict-verification, --capture-conflicts, --capture-dataset. Opcje pipeline:')
         sys.argv=[sys.argv[0],'--help']
         pipeline.main()
         return
     os.environ['OMP_THREAD_LIMIT']=str(args.threads)
     engine=Engine(args.directory)
     recorder=None
+    dataset=None
     if args.capture_conflicts:
         from conflict_capture import ConflictCapture
         recorder=ConflictCapture(Path('ocr_conflicts_'+datetime.now().strftime('%Y%m%d_%H%M%S_%f')))
         print('Diagnostyka konfliktow: maks. 60 przypadkow; zapis PNG doliczany do czasu analizy.', flush=True)
+    if args.capture_dataset:
+        from dataset_capture import DatasetCapture
+        dataset=DatasetCapture(Path('ocr_dataset_'+datetime.now().strftime('%Y%m%d_%H%M%S_%f')))
+        print('Dataset: surowe PNG 5/s; zapis doliczany do czasu analizy. OCR nie jest etykieta.', flush=True)
     original_factory,original_analyzer,original_parser=pipeline.make_engine,pipeline.HpMpAnalyzer,pipeline.parse_output
     original_argv=sys.argv
     try:
@@ -134,8 +144,12 @@ def main():
                         begin=time.perf_counter()
                         recorder.capture(frame,result,self.top.rectangles,self.boxes,binary)
                         result['diagnostic_ms']=(time.perf_counter()-begin)*1000
+                    if dataset is not None:
+                        begin=time.perf_counter()
+                        dataset.capture(frame,result,self.top.rectangles,self.boxes,self.side_bars)
+                        result['dataset_ms']=(time.perf_counter()-begin)*1000
                     return result
-            pipeline.HpMpAnalyzer=lambda engine, rectangles: RecordingDualAnalyzer(Analyzer(engine, rectangles))
+            pipeline.HpMpAnalyzer=lambda engine, rectangles: RecordingDualAnalyzer(Analyzer(engine, rectangles), strict=args.strict_verification)
         else:
             pipeline.HpMpAnalyzer=Analyzer
         pipeline.parse_output=parse_reading
@@ -149,6 +163,8 @@ def main():
         engine.tess.close()
         if recorder is not None:
             recorder.finish()
+        if dataset is not None:
+            dataset.finish()
 
 
 if __name__=='__main__':

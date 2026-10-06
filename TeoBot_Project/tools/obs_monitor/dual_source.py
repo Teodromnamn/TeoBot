@@ -70,8 +70,33 @@ def combine(top, side, checked, cached_maximum=None):
     return result
 
 
+class ConfirmationGate:
+    """Two consecutive same-frame agreements; observations are not action values."""
+    def __init__(self, max_gap=.25):
+        self.previous = None
+        self.max_gap = max_gap
+
+    def apply(self, reading, now):
+        result = dict(reading)
+        value = reading.get('value')
+        if reading.get('verification') != 'current_agrees' or value is None:
+            self.previous = None
+            result.update(candidate_value=value, value=None, quality='unconfirmed',
+                          confirmation='sources_not_agreed')
+            return result
+        key = (value['current'], value['maximum'])
+        previous = self.previous
+        self.previous = (key, now)
+        if previous and previous[0] == key and 0 < now-previous[1] <= self.max_gap:
+            result['confirmation'] = 'two_frames_agree'
+        else:
+            result.update(candidate_value=value, value=None, quality='unconfirmed',
+                          confirmation='waiting_second_frame')
+        return result
+
+
 class DualAnalyzer:
-    def __init__(self, top_analyzer, clock=time.perf_counter):
+    def __init__(self, top_analyzer, clock=time.perf_counter, strict=False):
         self.top = top_analyzer
         self.engine = top_analyzer.engine
         self.clock = clock
@@ -79,6 +104,8 @@ class DualAnalyzer:
         self.next_check = 0.
         self.fast_until = 0.
         self.conflict_pending = False
+        self.strict = strict
+        self.confirmations = [ConfirmationGate(), ConfirmationGate()]
 
     def read_side(self, frame, index):
         x,y,w,h = self.boxes[index]
@@ -86,6 +113,7 @@ class DualAnalyzer:
 
     def calibrate(self, frame, readings, guards):
         self.boxes, bars = locate(frame, return_bars=True)
+        self.side_bars = bars
         self.shape = frame.shape
         self.guards = guards
         red, blue = bars
@@ -103,7 +131,8 @@ class DualAnalyzer:
                for i in range(2)):
             raise RuntimeError(f'Kalibracja bocznych liczb niezgodna z gora: {side}. '
                                'Pokaz pelne HP/MP bez popupow i uruchom ponownie.')
-        print(f'Boczne HP/MP: {self.boxes}; zgodne z gora. Weryfikacja 2/s.', flush=True)
+        cadence = 'kazda klatka + potwierdzenie kolejnej' if self.strict else '2/s'
+        print(f'Boczne HP/MP: {self.boxes}; zgodne z gora. Weryfikacja {cadence}.', flush=True)
         return {'side_rectangles': self.boxes, 'side_readings': side}
 
     def geometry_ok(self, frame):
@@ -120,7 +149,7 @@ class DualAnalyzer:
         if self.boxes is None:
             raise RuntimeError('Boczny odczyt wymaga kalibracji')
         # Errors trigger immediate verification, not a delayed half-second check.
-        due = self.conflict_pending or started >= self.next_check or any(r['value'] is None for r in readings)
+        due = self.strict or self.conflict_pending or started >= self.next_check or any(r['value'] is None for r in readings)
         side_ms = 0.
         if due:
             begin = self.clock()
@@ -134,6 +163,9 @@ class DualAnalyzer:
             self.next_check = started + (.1 if started < self.fast_until else .5)
         else:
             combined = [combine(r,None,False) for r in readings]
+        if self.strict:
+            now = self.clock()
+            combined = [gate.apply(r, now) for gate, r in zip(self.confirmations, combined)]
         analysis.update(readings=combined, side_ms=side_ms, side_checked=due,
                         total_ms=(self.clock()-started)*1000)
         return analysis
