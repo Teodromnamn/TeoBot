@@ -39,6 +39,39 @@ class Tests(unittest.TestCase):
         self.assertIsNone(select_source(top(111),{'current':111},e,195)['value'])
         self.assertIsNone(select_source(top(111),{'current':111},{'top':{'available':False}},195)['value'])
 
+    def test_two_clean_counters_with_explicit_bar_occlusion_need_temporal_confirmation(self):
+        e={'top':{'available':False,'reason':'noncontiguous_or_occluded'},
+           'sidebar':{'available':False,'reason':'foreign_color_overlay'}}
+        r=select_source(top(35,150),{'current':35},e,150)
+        self.assertEqual(r['verification'],'current_agrees_without_color')
+        gate=ConfirmationGate(allow_color_supported=True)
+        self.assertIsNone(gate.apply(r,1.)['value'])
+        self.assertEqual(gate.apply(r,1.1)['value']['current'],35)
+        strict=ConfirmationGate()
+        self.assertIsNone(strict.apply(r,1.2)['value'])
+        self.assertIsNone(select_source(top(35,150),{'current':34},e,150)['value'])
+        self.assertIsNone(select_source(top(35,151),{'current':35},e,150)['value'])
+        self.assertIsNone(select_source(top(35,150),{'current':35,'reason':'foreign_color_overlay'},e,150)['value'])
+        e['top']={'available':True,'lower_percent':0,'upper_percent':2}
+        self.assertIsNone(select_source(top(35,150),{'current':35},e,150)['value'])
+
+    def test_changing_current_requires_two_full_color_supported_pairs(self):
+        gate=ConfirmationGate(allow_color_supported=True)
+        r=select_source(top(111),{'current':111},evidence(),195)
+        self.assertIsNone(gate.apply(r,1.)['value'])
+        r2=select_source(top(110),{'current':110},evidence(),195)
+        confirmed=gate.apply(r2,1.1)
+        self.assertEqual(confirmed['value']['current'],110)
+        self.assertEqual(confirmed['confirmation'],'two_frames_consistent_change')
+        # Single-source changes still wait. No extension of freshness window.
+        side=select_source({'value':None},{'current':109},evidence(),195)
+        self.assertIsNone(gate.apply(side,1.2)['value'])
+        self.assertIsNone(gate.apply(select_source({'value':None},{'current':110},evidence(),195),1.3)['value'])
+        self.assertIsNone(gate.apply(r,2.)['value'])
+        strict=ConfirmationGate()
+        self.assertIsNone(strict.apply(r,1.)['value'])
+        self.assertIsNone(strict.apply(r2,1.1)['value'])
+
     def test_temporal_confirmation_resets_on_source_or_cached_maximum_change(self):
         gate=ConfirmationGate(allow_color_supported=True)
         r=select_source({'value':None},{'current':111},evidence(),195)

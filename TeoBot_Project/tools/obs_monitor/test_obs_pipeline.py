@@ -149,7 +149,7 @@ def publish(path, status, readings=None, age_ms=None, max_age_ms=250, bar_status
             'valid': valid, 'quality': reading.get('quality', 'exact') if valid else ('stale' if last_known else 'unavailable'),
             'source': reading.get('source', 'top_text') if valid else None,
             'verification': reading.get('verification', 'not_checked') if fresh else 'not_checked',
-            'verified_current': bool(valid and reading.get('verification') == 'current_agrees'),
+            'verified_current': bool(valid and reading.get('verification') in ('current_agrees','current_agrees_without_color')),
             'confirmation': reading.get('confirmation') if fresh else None,
             'fill_status': reading.get('fill_status') if fresh else None,
             'fill': reading.get('fill') if fresh else None,

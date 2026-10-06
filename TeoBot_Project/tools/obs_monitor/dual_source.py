@@ -95,6 +95,7 @@ class ConfirmationGate:
         self.previous = None
         self.max_gap = max_gap
         self.allow_color_supported = allow_color_supported
+        self.previous_verified_pair = False
 
     def apply(self, reading, now):
         result = dict(reading)
@@ -103,8 +104,11 @@ class ConfirmationGate:
         if self.allow_color_supported:
             supported = (reading.get('verification') in ('current_agrees','top_color_supported','side_color_supported')
                          and reading.get('fill_status') == 'consistent')
+            supported = supported or (reading.get('verification') == 'current_agrees_without_color'
+                                      and reading.get('fill_status') == 'unavailable')
         if not supported or value is None:
             self.previous = None
+            self.previous_verified_pair = False
             result.update(candidate_value=value or reading.get('candidate_value'), value=None, quality='unconfirmed',
                           confirmation='sources_not_agreed')
             return result
@@ -112,12 +116,31 @@ class ConfirmationGate:
                reading.get('source') if self.allow_color_supported else None,
                value.get('last_confirmed_maximum') if self.allow_color_supported else None)
         previous = self.previous
+        previous_pair = self.previous_verified_pair
+        verified_pair = (reading.get('verification') == 'current_agrees'
+                         and reading.get('fill_status') == 'consistent')
         self.previous = (key, now)
-        if previous and previous[0] == key and 0 < now-previous[1] <= self.max_gap:
-            result['confirmation'] = 'two_frames_agree'
+        self.previous_verified_pair = verified_pair
+        trusted_change = (self.allow_color_supported and previous and previous_pair and verified_pair
+                          and previous[0][1:] == key[1:])
+        if previous and (previous[0] == key or trusted_change) and 0 < now-previous[1] <= self.max_gap:
+            result['confirmation'] = ('two_frames_agree' if previous[0] == key
+                                      else 'two_frames_consistent_change')
         else:
+            if previous is None:
+                reason='no_previous_candidate'
+            elif now <= previous[1]:
+                reason='non_monotonic_time'
+            elif now-previous[1] > self.max_gap:
+                reason='sample_gap'
+            elif previous[0][0] != key[0]:
+                reason='current_changed'
+            elif previous[0][1] != key[1]:
+                reason='maximum_or_quality_changed'
+            else:
+                reason='source_or_cached_maximum_changed'
             result.update(candidate_value=value, value=None, quality='unconfirmed',
-                          confirmation='waiting_second_frame')
+                          confirmation='waiting_second_frame',confirmation_reset_reason=reason)
         return result
 
 

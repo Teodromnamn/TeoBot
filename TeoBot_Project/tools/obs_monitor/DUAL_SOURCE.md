@@ -201,3 +201,38 @@ python -X utf8 tools/obs_monitor/test_obs_tesseract.py --resilient-verification 
 ```
 
 This tool only publishes readings; it does not send healing actions.
+
+
+## Fill and changing-current checks
+
+Fill intervals include half a pixel for rounding the displayed endpoint, in
+addition to the existing calibrated margin. Sidebar green/yellow item pixels
+invalidate fill evidence rather than representing a lower resource percentage.
+Gray or matching-color overlays may still evade the heuristic.
+
+In resilient mode only, if both counters agree, the observed maximum equals the
+last confirmed maximum, both bars are unavailable, and at least one bar has an
+explicit foreign-color overlay, two fresh matching text pairs can confirm the
+reading (`current_agrees_without_color`). A present conflicting color interval,
+missing/rejected counter, disagreement or new maximum blocks this fallback.
+
+Two fresh complete top/sidebar agreements supported by color may confirm a
+changed current without waiting for it to stabilize (`two_frames_consistent_change`).
+Both frames must have the same maximum/source/quality; the 250 ms gap limit is
+unchanged. Single-source and color-unavailable observations still require an
+identical current in two frames. Existing strict mode retains identical-pair
+confirmation. Reset reasons are recorded so missing samples can be separated
+from changing current or source/maximum changes.
+
+To evaluate new selection/fill/confirmation against previously saved Windows
+OCR observations without rerunning Tesseract:
+
+```bash
+python -X utf8 tools/obs_monitor/replay_hp_mp_dataset.py DATASET.zip --resilient-verification --saved-ocr replay_resilient.jsonl > replay_updated.jsonl
+```
+
+The archive and saved replay must refer to the same recording. Case/resource
+coverage is checked, but legacy JSONL files contain no image fingerprint to
+prove recording identity. Saved observations remain untrusted OCR, not labels.
+This mode reruns color and decision logic on the original images; glyph OCR is
+reused. Do not use the same path for the input and redirected output.

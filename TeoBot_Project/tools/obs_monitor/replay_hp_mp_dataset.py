@@ -26,21 +26,35 @@ def main():
     p.add_argument('--threads',type=int,choices=(1,2,4),default=2)
     p.add_argument('--color-check',action='store_true',help='Validate OCR percentage against calibrated fill intervals')
     p.add_argument('--resilient-verification',action='store_true',help='Glyph retries, source arbitration and temporal confirmation; implies color-check')
+    p.add_argument('--saved-ocr',type=Path,help='Reuse top/side observations from a prior replay JSONL; no Tesseract rerun. Not labels.')
     args = p.parse_args()
     args.color_check = args.color_check or args.resilient_verification
+    saved = {}
+    if args.saved_ocr:
+        with args.saved_ocr.open(encoding='utf-8-sig') as f:
+            for line in f:
+                if not line.strip():continue
+                row=json.loads(line)
+                if 'case' not in row:continue
+                key=(row['case'],row['resource'])
+                if key in saved:raise ValueError('Duplicate saved OCR observation')
+                saved[key]=row
+        if not saved:raise ValueError('No saved OCR observations')
     labels = {}
     if args.labels:
         with args.labels.open(encoding='utf-8-sig',newline='') as f:
             labels = {row['case']:row for row in csv.DictReader(f)}
     os.environ['OMP_THREAD_LIMIT'] = str(args.threads)
     cv2.setNumThreads(1)
-    engine = Engine(args.directory)
+    engine = None if args.saved_ocr else Engine(args.directory)
     stats = Counter()
     try:
         with zipfile.ZipFile(args.archive) as archive:
             cases = sorted(n.rsplit('/',1)[0] for n in archive.namelist() if n.endswith('/reading.json'))
             if not cases:
                 raise ValueError('No dataset samples')
+            if saved and set(saved) != {(case,r) for case in cases for r in ('hp','mp')}:
+                raise ValueError('Saved OCR case IDs/resources do not match this archive')
             reference = 'calibration' if 'calibration/hp_top_original.png' in archive.namelist() else cases[0]
             models = {}
             if args.color_check:
@@ -56,7 +70,7 @@ def main():
                 for resource in ('hp','mp'):
                     def reference_image(kind):
                         return cv2.imdecode(np.frombuffer(archive.read(f'{reference}/{resource}_{kind}.png'),np.uint8),1)
-                    ref = recognize_top(engine,binary(prepare(reference_image('top_original'),'dynamic')))
+                    ref = saved[(cases[0],resource)]['top'] if saved else recognize_top(engine,binary(prepare(reference_image('top_original'),'dynamic')))
                     # Calibration PNGs do not include counters; use full top ratios.
                     value = ref['value']
                     if value is None or value['current'] != value['maximum']:
@@ -74,8 +88,12 @@ def main():
                             raise ValueError(f'Invalid image: {case}/{resource}/{kind}')
                         return result
                     start = time.perf_counter()
-                    top = recognize_top(engine,binary(prepare(image('top_original'),'dynamic')),args.resilient_verification)
-                    side = recognize_side(engine,image('side_original'),args.resilient_verification)
+                    if saved:
+                        top = saved[(case,resource)]['top']
+                        side = saved[(case,resource)]['side']
+                    else:
+                        top = recognize_top(engine,binary(prepare(image('top_original'),'dynamic')),args.resilient_verification)
+                        side = recognize_side(engine,image('side_original'),args.resilient_verification)
                     value = top['value']
                     agreement = value is not None and side['current'] == value['current']
                     checked = None
@@ -99,6 +117,8 @@ def main():
                         if maximum_status == 'maximum_pending':
                             confirmed = dict(confirmed,candidate_value=confirmed['value'],value=None,
                                              quality='unconfirmed',confirmation='maximum_pending')
+                        if confirmed.get('confirmation_reset_reason'):
+                            stats['wait_'+confirmed['confirmation_reset_reason']] += 1
                         stats['selected_resources'] += int(selected['value'] is not None)
                         stats['confirmed_resources'] += int(confirmed['value'] is not None)
                         stats['single_source_selected'] += int(selected.get('verification') in ('top_color_supported','side_color_supported'))
@@ -125,11 +145,12 @@ def main():
                     print(json.dumps({'case':case,'resource':resource,'top':top,'side':side,
                                       'agreement':agreement,'correct_against_manual_label':correct,
                                       'color':checked,'selected':selected,'confirmed':confirmed,
+                                      'ocr_reused':bool(saved),
                                       'color_accepted':color_accepted if args.color_check else None,
                                       'ms':round((time.perf_counter()-start)*1000,2)}))
         print(json.dumps({'summary':dict(stats),'note':('Agreement is not accuracy. Temporal replay uses recorded sample times, not every live frame; camera age and actions are not simulated.' if args.resilient_verification else 'Agreement is not accuracy; no action or temporal confirmation simulated.')}))
     finally:
-        engine.tess.close()
+        if engine is not None:engine.tess.close()
 
 
 if __name__ == '__main__':

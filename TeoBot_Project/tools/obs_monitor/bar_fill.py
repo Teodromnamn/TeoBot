@@ -32,6 +32,13 @@ class FillEvidence:
     def measure(self, image):
         if image.shape != self.shape or not len(self.rows):
             return {'available':False, 'reason':'layout_or_calibration'}
+        if self.sidebar:
+            hue,saturation,value=cv2.split(cv2.cvtColor(image,cv2.COLOR_BGR2HSV))
+            # Sidebar fill is always red/blue. Green/yellow item pixels are
+            # foreign content, including when they hide the true fill edge.
+            foreign=(hue >= 15) & (hue <= 85) & (saturation > 90) & (value > 80)
+            if np.count_nonzero(foreign) >= max(4,image.shape[0]*image.shape[1]*.01):
+                return {'available':False,'reason':'foreign_color_overlay'}
         mask = color_mask(image, self.resource, self.sidebar)
         width = mask.shape[1]
         boundaries = []
@@ -48,11 +55,12 @@ class FillEvidence:
         if max(boundaries)-min(boundaries) > max(3, width*.04):
             return {'available':False, 'reason':'rows_disagree'}
         # Short sidebar bars include bevel/rounding: reserve three pixels there.
-        margin = 3 if self.sidebar else 2
+        margin = (3 if self.sidebar else 2) + .5
         return {'available':True,
                 'lower_percent':100*max(0,min(boundaries)-margin)/width,
                 'upper_percent':100*min(width,max(boundaries)+margin)/width,
                 'support_rows':len(boundaries),
+                'pixel_rounding_margin':.5,
                 'note':'Color consistency only; occlusion cannot always be detected.'}
 
 

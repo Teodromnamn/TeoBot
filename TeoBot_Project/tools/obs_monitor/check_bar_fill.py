@@ -35,6 +35,21 @@ class Tests(unittest.TestCase):
         self.assertTrue(result['lower_percent'] <= 20 <= result['upper_percent'])
         self.assertFalse(model.measure(low[:,:80])['available'])
 
+    def test_sidebar_icon_at_fill_edge_is_not_shorter_fill(self):
+        full=np.full((10,100,3),(180,0,0),dtype=np.uint8)
+        partial=full.copy();partial[4:6,24:]=30
+        partial[:,17:24]=(10,180,220)
+        evidence=FillEvidence(full,'mp',sidebar=True).measure(partial)
+        self.assertFalse(evidence['available'])
+        self.assertEqual(evidence['reason'],'foreign_color_overlay')
+
+    def test_half_pixel_rounding_supports_boundary_without_large_tolerance(self):
+        full=np.full((10,858,3),(0,180,0),dtype=np.uint8)
+        partial=full.copy();partial[:,451:]=30
+        e=FillEvidence(full,'hp').measure(partial)
+        self.assertTrue(e['lower_percent'] <= 100*103/195 <= e['upper_percent'])
+        self.assertFalse(e['lower_percent'] <= 100*111/195 <= e['upper_percent'])
+
     def test_sidebar_colored_bevel_is_not_fill(self):
         full = np.full((10,100,3),(180,0,0),dtype=np.uint8)
         partial = full.copy()
