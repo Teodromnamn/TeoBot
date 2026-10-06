@@ -17,6 +17,7 @@ def main():
     parser.add_argument('archive', type=Path)
     parser.add_argument('--directory', default=r'C:\Program Files\Tesseract-OCR')
     parser.add_argument('--threads', type=int, choices=(1, 2, 4), default=2)
+    parser.add_argument('--glyph-retry', action='store_true', help='Retry rejected numbers as separate digits')
     args = parser.parse_args()
     os.environ['OMP_THREAD_LIMIT'] = str(args.threads)
     cv2.setNumThreads(1)
@@ -36,14 +37,14 @@ def main():
                     if crop is None:
                         raise ValueError(f'Cannot decode {folder}/{resource}')
                     start = time.perf_counter()
-                    result = recognize_side(engine, crop)
+                    result = recognize_side(engine, crop, glyph_retry=args.glyph_retry)
                     elapsed = (time.perf_counter()-start)*1000
                     saved = meta['analysis']['readings'][index]
                     print(json.dumps({'case':folder, 'resource':resource,
                                       'old_side':saved.get('side', {}).get('raw'),
                                       'new_side':result['raw'], 'current':result['current'],
                                       'visible_digit_groups':result['visible_digit_groups'],
-                                      'reason':result.get('reason'), 'saved_top':saved.get('raw'),
+                                      'reason':result.get('reason'), 'glyph_recovery':result.get('glyph_recovery'), 'saved_top':saved.get('raw'),
                                       'ms':round(elapsed, 2)}, ensure_ascii=False))
     finally:
         engine.tess.close()

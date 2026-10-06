@@ -7,6 +7,8 @@ import numpy as np
 from test_side_counters import locate
 from benchmark_hp_mp import crop_bar
 from bar_fill import FillEvidence, validate_fill
+from glyph_ocr import read_digits
+from source_selection import select_source
 
 
 def side_image(crop):
@@ -23,7 +25,7 @@ def side_image(crop):
     return cv2.copyMakeBorder(binary, 16, 16, 16, 16, cv2.BORDER_CONSTANT, value=255)
 
 
-def recognize_side(engine, crop):
+def recognize_side(engine, crop, glyph_retry=False):
     """Require one OCR digit per separated ink group; never infer omitted digits."""
     image = side_image(crop)
     columns = np.any(image < 128, axis=0)
@@ -39,6 +41,21 @@ def recognize_side(engine, crop):
         result['reason'] = 'digit_count_mismatch'
     else:
         result['current'] = int(raw)
+    if glyph_retry and crop.size:
+        # Counter glyphs/background are neutral gray. Colored item icons are
+        # foreign content even when their bright edges resemble valid digits.
+        low = crop.min(axis=2).astype(np.int16)
+        high = crop.max(axis=2).astype(np.int16)
+        colored = int(np.count_nonzero((high-low > 45) & (high > 80)))
+        result['foreign_color_pixels'] = colored
+        if colored >= max(4,crop.shape[0]*crop.shape[1]*.01):
+            result.update(current=None,reason='foreign_color_overlay')
+            return result
+    if glyph_retry and result['current'] is None and count:
+        recovery = read_digits(engine, image)
+        result['glyph_recovery'] = recovery
+        if recovery['text'] is not None and len(recovery['text']) == count:
+            result.update(current=int(recovery['text']), reason=None, method='separate_glyphs')
     return result
 
 
@@ -74,19 +91,26 @@ def combine(top, side, checked, cached_maximum=None):
 
 class ConfirmationGate:
     """Two consecutive same-frame agreements; observations are not action values."""
-    def __init__(self, max_gap=.25):
+    def __init__(self, max_gap=.25, allow_color_supported=False):
         self.previous = None
         self.max_gap = max_gap
+        self.allow_color_supported = allow_color_supported
 
     def apply(self, reading, now):
         result = dict(reading)
         value = reading.get('value')
-        if reading.get('verification') != 'current_agrees' or value is None:
+        supported = reading.get('verification') == 'current_agrees'
+        if self.allow_color_supported:
+            supported = (reading.get('verification') in ('current_agrees','top_color_supported','side_color_supported')
+                         and reading.get('fill_status') == 'consistent')
+        if not supported or value is None:
             self.previous = None
             result.update(candidate_value=value or reading.get('candidate_value'), value=None, quality='unconfirmed',
                           confirmation='sources_not_agreed')
             return result
-        key = (value['current'], value['maximum'])
+        key = (value['current'], value['maximum'],
+               reading.get('source') if self.allow_color_supported else None,
+               value.get('last_confirmed_maximum') if self.allow_color_supported else None)
         previous = self.previous
         self.previous = (key, now)
         if previous and previous[0] == key and 0 < now-previous[1] <= self.max_gap:
@@ -98,7 +122,7 @@ class ConfirmationGate:
 
 
 class DualAnalyzer:
-    def __init__(self, top_analyzer, clock=time.perf_counter, strict=False):
+    def __init__(self, top_analyzer, clock=time.perf_counter, strict=False, resilient=False):
         self.top = top_analyzer
         self.engine = top_analyzer.engine
         self.clock = clock
@@ -107,11 +131,12 @@ class DualAnalyzer:
         self.fast_until = 0.
         self.conflict_pending = False
         self.strict = strict
-        self.confirmations = [ConfirmationGate(), ConfirmationGate()]
+        self.resilient = resilient
+        self.confirmations = [ConfirmationGate(allow_color_supported=resilient) for _ in range(2)]
 
     def read_side(self, frame, index):
         x,y,w,h = self.boxes[index]
-        return recognize_side(self.engine, frame[y:y+h, x:x+w])
+        return recognize_side(self.engine, frame[y:y+h, x:x+w], glyph_retry=self.resilient)
 
     def calibrate(self, frame, readings, guards):
         self.boxes, bars = locate(frame, return_bars=True)
@@ -155,7 +180,7 @@ class DualAnalyzer:
         if self.boxes is None:
             raise RuntimeError('Boczny odczyt wymaga kalibracji')
         # Errors trigger immediate verification, not a delayed half-second check.
-        due = self.strict or self.conflict_pending or started >= self.next_check or any(r['value'] is None for r in readings)
+        due = self.strict or self.resilient or self.conflict_pending or started >= self.next_check or any(r['value'] is None for r in readings)
         side_ms = 0.
         if due:
             begin = self.clock()
@@ -169,11 +194,16 @@ class DualAnalyzer:
             self.next_check = started + (.1 if started < self.fast_until else .5)
         else:
             combined = [combine(r,None,False) for r in readings]
-        if self.strict:
-            combined = [validate_fill(r, {
+        if self.strict or self.resilient:
+            evidence = [{
                 'top':self.fill_models[i]['top'].measure(crop_bar(frame,self.top.rectangles[i])),
-                'sidebar':self.fill_models[i]['sidebar'].measure(crop_bar(frame,self.side_bars[i]))})
-                for i,r in enumerate(combined)]
+                'sidebar':self.fill_models[i]['sidebar'].measure(crop_bar(frame,self.side_bars[i]))}
+                for i in range(2)]
+            if self.resilient:
+                combined = [select_source(r,s,e,g.maximum)
+                            for r,s,e,g in zip(readings,side,evidence,self.guards)]
+            else:
+                combined = [validate_fill(r,e) for r,e in zip(combined,evidence)]
             now = self.clock()
             combined = [gate.apply(r, now) for gate, r in zip(self.confirmations, combined)]
         analysis.update(readings=combined, side_ms=side_ms, side_checked=due,

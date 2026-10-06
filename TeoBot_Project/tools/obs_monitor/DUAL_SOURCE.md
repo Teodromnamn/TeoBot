@@ -145,3 +145,59 @@ HP maxima; one had a visibly occluded sidebar MP bar. This is a consistency
 result, not measured accuracy on all samples. Full Tesseract replay also ran on
 all 1,582 resource crops without errors. Regression suite: 28 tests, including
 repeated wrong maximum rejection and the colored sidebar bevel.
+
+## Experimental source arbitration and glyph recovery
+
+`--resilient-verification` implies sidebar verification on every analyzed frame.
+It is mutually exclusive with `--strict-verification`; existing modes retain
+previous behavior. This mode is for evaluation, not a claim of zero OCR errors.
+
+- Colored foreign content in the neutral-gray sidebar counter is rejected
+  before glyph recovery. This catches item icons; gray overlays may still evade
+  this heuristic. The threshold is not a universal occlusion detector.
+- Rejected sidebar numbers are retried as separate visible glyphs. Each glyph
+  must yield the same single digit in page modes 10 and 7. Original raw text,
+  rejection details and recovery text remain in diagnostics.
+- Invalid top ratios are retried using a geometrically detected slash, followed
+  by separate current/maximum number recognition. Long terminal UI underlines
+  can be removed for segmentation. No slash is inferred from cached maxima or
+  from the other counter. MP suffix recognition is unnecessary for normal OCR;
+  uncertain glyph recovery can still reject an otherwise readable crop.
+- Every available color interval must support a candidate; unavailable bars
+  are excluded. A top candidate uses its observed maximum. A side candidate
+  uses the last confirmed maximum only for checking color consistency.
+- A single supported candidate can be selected when the other is missing or
+  inconsistent with color. If two different currents both fit the intervals,
+  neither is selected. Color never supplies an exact current value.
+- Two consecutive matching candidates within 250 ms are required. A source or
+  cached-maximum change resets confirmation. Source switching cannot count as
+  a second confirmation of the previous source.
+- Sidebar-only output remains `current_only`, with `maximum=null` and
+  `percent=null`; the estimated percentage is explicitly based on cached max.
+  Freshness/expiry and changed-maximum checks remain active.
+
+Partial overlays may resemble legitimate bar fill or a different digit. The
+color model and two OCR segmentation modes are not independent ground truth.
+Do not interpret increased availability or repeated agreement as accuracy.
+
+Offline evaluation, without OBS or the game:
+
+```bash
+python -X utf8 tools/obs_monitor/replay_hp_mp_dataset.py DATASET.zip --resilient-verification > replay_resilient.jsonl
+python -X utf8 tools/obs_monitor/replay_side_conflicts.py CONFLICTS.zip --glyph-retry
+```
+
+Optional `--labels labels.csv` evaluates independently annotated values. Replay
+uses recorded sample timestamps and the live confirmation/maximum guards, but
+5 Hz dataset sampling omits intermediate live frames. Camera age, publication
+expiry and actions are not simulated. A full visible calibration frame is
+required; archives without calibration PNGs use their first sample, which must
+be independently verified as full HP/MP. Stored OCR is not a label.
+
+Only after offline inspection, optional live integration:
+
+```bash
+python -X utf8 tools/obs_monitor/test_obs_tesseract.py --resilient-verification --seconds 120 --capture-conflicts
+```
+
+This tool only publishes readings; it does not send healing actions.

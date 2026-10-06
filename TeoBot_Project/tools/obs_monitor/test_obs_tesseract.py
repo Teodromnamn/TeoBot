@@ -17,6 +17,7 @@ from types import SimpleNamespace
 import numpy as np
 from benchmark_hp_mp import crop_bar,prepare,parse_output
 from test_tesseract_resident import ResidentTesseract
+from glyph_ocr import recover_ratio
 import test_obs_pipeline as pipeline
 
 
@@ -80,17 +81,30 @@ def parse_reading(result):
             'leading_parenthesis_ignored':leading_parenthesis}
 
 
+def recognize_top(engine, image, glyph_retry=False):
+    result = parse_reading(engine.recognize(image))
+    if glyph_retry and result['value'] is None:
+        recovery = recover_ratio(engine, image)
+        result['glyph_recovery'] = recovery
+        if recovery['text'] is not None:
+            recovered = parse_reading(SimpleNamespace(txts=[recovery['text']], scores=[0.]))
+            if recovered['value'] is not None:
+                result.update(value=recovered['value'], method='visual_separator_and_glyphs')
+    return result
+
+
 class Analyzer:
-    def __init__(self,engine,rectangles):
+    def __init__(self,engine,rectangles,glyph_retry=False):
         self.engine,self.rectangles=engine,rectangles
+        self.glyph_retry=glyph_retry
 
     def analyze(self,frame):
         start=time.perf_counter()
         crops=[binary(prepare(crop_bar(frame,r),'dynamic')) for r in self.rectangles]
         prepared=time.perf_counter()
-        results=[self.engine.recognize(c) for c in crops]
+        results=[recognize_top(self.engine,c,self.glyph_retry) for c in crops]
         recognized=time.perf_counter()
-        return {'readings':[parse_reading(r) for r in results],
+        return {'readings':results,
                 'prepare_ms':(prepared-start)*1000,
                 'recognition_ms':(recognized-prepared)*1000,
                 'total_ms':(time.perf_counter()-start)*1000,
@@ -104,17 +118,20 @@ def main():
     parser.add_argument('--capture-conflicts', action='store_true', help='Zapisz ograniczona paczke wycinkow przy konflikcie (wymaga --verify-side)')
     parser.add_argument('--capture-dataset', action='store_true', help='Zapisuj surowe wycinki obu zrodel i paskow do ZIP, 5/s, maks. 2000 probek')
     parser.add_argument('--strict-verification', action='store_true', help='Wymagaj zgodnosci obu OCR w kazdej klatce i dwoch kolejnych zgodnych par')
+    parser.add_argument('--resilient-verification', action='store_true', help='Eksperymentalnie: OCR cyfr osobno, wybor zrodla wsparty kolorem i dwiema klatkami')
     parser.add_argument('--threads',type=int,choices=[1,2,4],default=2)
     args,remaining=parser.parse_known_args()
-    if args.capture_dataset or args.strict_verification:
+    if args.capture_dataset or args.strict_verification or args.resilient_verification:
         args.verify_side = True
+    if args.strict_verification and args.resilient_verification:
+        parser.error('Wybierz strict-verification LUB resilient-verification')
     if args.capture_conflicts and not args.verify_side:
         parser.error('--capture-conflicts wymaga --verify-side')
     if '--retune' in remaining:
         raise SystemExit('Ten test Tesseracta nie uzywa Auto. Ustaw --threads 1, 2 lub 4.')
     if '--help' in remaining or '-h' in remaining:
         print(__doc__+'\nDodatkowo: --directory SCIEZKA, --threads 1|2|4, --verify-side, '
-              '--strict-verification, --capture-conflicts, --capture-dataset. Opcje pipeline:')
+              '--strict-verification, --resilient-verification, --capture-conflicts, --capture-dataset. Opcje pipeline:')
         sys.argv=[sys.argv[0],'--help']
         pipeline.main()
         return
@@ -154,7 +171,7 @@ def main():
                         dataset.capture(frame,result,self.top.rectangles,self.boxes,self.side_bars)
                         result['dataset_ms']=(time.perf_counter()-begin)*1000
                     return result
-            pipeline.HpMpAnalyzer=lambda engine, rectangles: RecordingDualAnalyzer(Analyzer(engine, rectangles), strict=args.strict_verification)
+            pipeline.HpMpAnalyzer=lambda engine, rectangles: RecordingDualAnalyzer(Analyzer(engine, rectangles, glyph_retry=args.resilient_verification), strict=args.strict_verification, resilient=args.resilient_verification)
         else:
             pipeline.HpMpAnalyzer=Analyzer
         pipeline.parse_output=parse_reading
