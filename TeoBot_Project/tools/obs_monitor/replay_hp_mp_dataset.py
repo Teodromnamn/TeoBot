@@ -27,6 +27,7 @@ def main():
     p.add_argument('--color-check',action='store_true',help='Validate OCR percentage against calibrated fill intervals')
     p.add_argument('--resilient-verification',action='store_true',help='Glyph retries, source arbitration and temporal confirmation; implies color-check')
     p.add_argument('--saved-ocr',type=Path,help='Reuse top/side observations from a prior replay JSONL; no Tesseract rerun. Not labels.')
+    p.add_argument('--no-ocr-cache',action='store_true',help='Disable exact pixel OCR cache for timing comparison')
     args = p.parse_args()
     args.color_check = args.color_check or args.resilient_verification
     saved = {}
@@ -46,7 +47,7 @@ def main():
             labels = {row['case']:row for row in csv.DictReader(f)}
     os.environ['OMP_THREAD_LIMIT'] = str(args.threads)
     cv2.setNumThreads(1)
-    engine = None if args.saved_ocr else Engine(args.directory)
+    engine = None if args.saved_ocr else (Engine(args.directory,cache_limit=0) if args.no_ocr_cache else Engine(args.directory))
     stats = Counter()
     try:
         with zipfile.ZipFile(args.archive) as archive:
@@ -112,7 +113,7 @@ def main():
                                     for kind,e in checked['fill'].items()}
                         guard = maximum_guards[resource]
                         if needs_glyph_check(top,side,evidence,guard.maximum):
-                            if engine is None:engine=Engine(args.directory)
+                            if engine is None:engine=Engine(args.directory,cache_limit=0) if args.no_ocr_cache else Engine(args.directory)
                             top=corroborate_top(engine,top,binary(prepare(image('top_original'),'dynamic')))
                         selected = select_source(top,side,evidence,guard.maximum)
                         confirmed = gates[resource].apply(selected,observed_at)

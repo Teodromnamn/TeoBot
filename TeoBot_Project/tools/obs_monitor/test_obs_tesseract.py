@@ -28,7 +28,9 @@ def binary(image):
 
 
 class Engine:
-    def __init__(self,directory):
+    def __init__(self,directory,cache_limit=128):
+        from ocr_cache import PixelCache
+        self.cache=PixelCache(limit=cache_limit)
         self.tess=ResidentTesseract(directory)
         # Read confidence before ResidentTesseract clears the page.
         self.mean_conf=self.tess.lib.TessBaseAPIMeanTextConf
@@ -36,6 +38,9 @@ class Engine:
         self.mean_conf.argtypes=[C.c_void_p]
 
     def recognize(self,image,psm=7):
+        return self.cache.recognize(image,psm,self._recognize)
+
+    def _recognize(self,image,psm=7):
         image=np.ascontiguousarray(image,dtype=np.uint8)
         h,w=image.shape
         t=self.tess
@@ -120,6 +125,7 @@ def main():
     parser.add_argument('--strict-verification', action='store_true', help='Wymagaj zgodnosci obu OCR w kazdej klatce i dwoch kolejnych zgodnych par')
     parser.add_argument('--resilient-verification', action='store_true', help='Eksperymentalnie: OCR cyfr osobno, wybor zrodla wsparty kolorem i dwiema klatkami')
     parser.add_argument('--threads',type=int,choices=[1,2,4],default=2)
+    parser.add_argument('--no-ocr-cache',action='store_true',help='Wylacz pamiec identycznych wycinkow do porownania czasu')
     args,remaining=parser.parse_known_args()
     if args.capture_dataset or args.strict_verification or args.resilient_verification:
         args.verify_side = True
@@ -136,7 +142,7 @@ def main():
         pipeline.main()
         return
     os.environ['OMP_THREAD_LIMIT']=str(args.threads)
-    engine=Engine(args.directory)
+    engine=Engine(args.directory,cache_limit=0 if args.no_ocr_cache else 128)
     recorder=None
     dataset=None
     if args.capture_conflicts:

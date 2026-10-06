@@ -535,6 +535,9 @@ def main():
                       'pairs': len(rows), 'ocr_ms': stats([r['ocr_ms'] for r in rows]),
                       'wait_ms': stats([r['wait_ms'] for r in rows]),
                       'received_to_result_ms': stats([r['received_to_result_ms'] for r in rows])}
+            if hasattr(engine,'cache'):
+                report['ocr_cache']={'hits':engine.cache.hits,'misses':engine.cache.misses,
+                                     'entries':len(engine.cache.entries),'pixel_bytes':engine.cache.bytes}
             if rows:
                 with (output / 'readings.csv').open('w', newline='', encoding='utf-8') as handle:
                     writer = csv.DictWriter(handle, fieldnames=list(rows[0]))

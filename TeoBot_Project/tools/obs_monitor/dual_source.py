@@ -27,6 +27,15 @@ def side_image(crop):
 
 def recognize_side(engine, crop, glyph_retry=False):
     """Require one OCR digit per separated ink group; never infer omitted digits."""
+    if glyph_retry and crop.size:
+        # Counter glyphs/background are neutral gray. Colored item icons are
+        # foreign content even when their bright edges resemble valid digits.
+        low = crop.min(axis=2).astype(np.int16)
+        high = crop.max(axis=2).astype(np.int16)
+        colored = int(np.count_nonzero((high-low > 45) & (high > 80)))
+        if colored >= max(4,crop.shape[0]*crop.shape[1]*.01):
+            return {'raw':'','current':None,'visible_digit_groups':0,
+                    'foreign_color_pixels':colored,'reason':'foreign_color_overlay','ocr_skipped':True}
     image = side_image(crop)
     if glyph_retry:
         ink=(image<128).astype(np.uint8)
@@ -49,16 +58,6 @@ def recognize_side(engine, crop, glyph_retry=False):
         result['reason'] = 'digit_count_mismatch'
     else:
         result['current'] = int(raw)
-    if glyph_retry and crop.size:
-        # Counter glyphs/background are neutral gray. Colored item icons are
-        # foreign content even when their bright edges resemble valid digits.
-        low = crop.min(axis=2).astype(np.int16)
-        high = crop.max(axis=2).astype(np.int16)
-        colored = int(np.count_nonzero((high-low > 45) & (high > 80)))
-        result['foreign_color_pixels'] = colored
-        if colored >= max(4,crop.shape[0]*crop.shape[1]*.01):
-            result.update(current=None,reason='foreign_color_overlay')
-            return result
     if glyph_retry and result['current'] is None and count:
         recovery = read_digits(engine, image)
         result['glyph_recovery'] = recovery

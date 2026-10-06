@@ -35,6 +35,8 @@ class Tests(unittest.TestCase):
 
     def test_side_mode_restored_when_recognition_fails(self):
         engine = Engine.__new__(Engine)
+        from ocr_cache import PixelCache
+        engine.cache=PixelCache()
         engine.tess = Mock()
         engine.tess.recognize.return_value = 1
         with self.assertRaises(RuntimeError):

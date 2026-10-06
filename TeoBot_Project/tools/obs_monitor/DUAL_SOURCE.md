@@ -308,3 +308,5 @@ Windows smoke/performance test without dataset capture:
 /c/_MS/GIT/TeoBot_OCR_venv/Scripts/python.exe -X utf8 tools/obs_monitor/test_obs_tesseract.py --resilient-verification --seconds 180 --game-window-title "Tibia"
 ```
 Minimize for 3 seconds, restore, switch foreground to another window while keeping the client visible, then inspect latest.json and events.
+
+OCR performance: exact prepared pixel bytes, shape and PSM key a per-engine LRU (128 entries, at most 8 MiB pixel keys). Only deterministic OCR text/confidence is memoized; current capture, window checks, fill validation, maxima and temporal confirmation run anew. No approximate matching, no time-based current reuse. Colored sidebar overlays are rejected before OCR. `--no-ocr-cache` disables memoization for live A/B timing. Summary exposes cache hits/misses and memory.

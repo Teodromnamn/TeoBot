@@ -37,7 +37,7 @@ class Tests(unittest.TestCase):
         r=recognize_side(e,crop,glyph_retry=True)
         self.assertIsNone(r['current'])
         self.assertEqual(r['reason'],'foreign_color_overlay')
-        e.recognize.assert_called_once()
+        e.recognize.assert_not_called()
 
     def test_disagreement_or_multiple_characters_rejected(self):
         e=Mock();e.recognize.side_effect=[SimpleNamespace(txts=['1']),SimpleNamespace(txts=['7'])]
