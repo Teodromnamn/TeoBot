@@ -19,6 +19,7 @@ class Tests(unittest.TestCase):
         boxes = [(0,0,30,10),(10,20,30,10)]
         with tempfile.TemporaryDirectory() as folder:
             recorder = DatasetCapture(Path(folder)/'samples',limit=2,clock=lambda:now[0])
+            recorder.calibrate(frame,boxes,boxes)
             self.assertTrue(recorder.capture(frame, {}, boxes, boxes, boxes))
             now[0] = .1
             self.assertFalse(recorder.capture(frame, {}, boxes, boxes, boxes))
@@ -27,7 +28,8 @@ class Tests(unittest.TestCase):
             now[0] = 1.
             self.assertFalse(recorder.capture(frame, {}, boxes, boxes, boxes))
             with zipfile.ZipFile(recorder.finish()) as archive:
-                self.assertEqual(len(archive.namelist()),17)
+                self.assertEqual(len(archive.namelist()),21)
+                self.assertIn('calibration/mp_side_bar.png',archive.namelist())
                 image = cv2.imdecode(np.frombuffer(archive.read('case_00000/mp_side_bar.png'),np.uint8),1)
                 np.testing.assert_array_equal(image,frame[20:30,10:40])
                 labels = list(csv.DictReader(io.StringIO(archive.read('labels.csv').decode())))

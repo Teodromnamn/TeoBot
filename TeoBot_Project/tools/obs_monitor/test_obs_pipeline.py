@@ -150,6 +150,9 @@ def publish(path, status, readings=None, age_ms=None, max_age_ms=250, bar_status
             'source': reading.get('source', 'top_text') if valid else None,
             'verification': reading.get('verification', 'not_checked') if fresh else 'not_checked',
             'verified_current': bool(valid and reading.get('verification') == 'current_agrees'),
+            'confirmation': reading.get('confirmation') if fresh else None,
+            'fill_status': reading.get('fill_status') if fresh else None,
+            'fill': reading.get('fill') if fresh else None,
             'value': value if valid else None,
             'reason': (bar_statuses[index] if fresh and bar_statuses else status),
             'observed_at_unix_ms': now_ms-age_ms if valid else None,
@@ -513,4 +516,3 @@ if __name__ == '__main__':
     except Exception as error:
         print(f'BLAD: {error}', file=sys.stderr)
         sys.exit(1)
-

@@ -1,0 +1,48 @@
+import unittest
+import numpy as np
+from bar_fill import FillEvidence, validate_fill
+from dual_source import ConfirmationGate
+
+
+class Tests(unittest.TestCase):
+    def test_wrong_maximum_cannot_pass_repeated_ocr_agreement(self):
+        full = np.full((8,100,3),(0,180,0),dtype=np.uint8)
+        partial = full.copy()
+        partial[:,53:] = 30
+        evidence = {'top':FillEvidence(full,'hp').measure(partial)}
+        good = {'value':{'current':103,'maximum':195},'verification':'current_agrees'}
+        self.assertEqual(validate_fill(good,evidence)['fill_status'],'consistent')
+        bad = dict(good,value={'current':103,'maximum':1634})
+        gate = ConfirmationGate()
+        for now in (1.,1.1,1.2):
+            checked = validate_fill(bad,evidence)
+            self.assertEqual(checked['fill_status'],'conflict')
+            self.assertIsNone(gate.apply(checked,now)['value'])
+
+    def test_internal_occlusion_yields_unknown_instead_of_guess(self):
+        full = np.full((8,100,3),(0,180,0),dtype=np.uint8)
+        partial = full.copy()
+        partial[:,60:] = 30
+        partial[:,20:40] = 30
+        self.assertFalse(FillEvidence(full,'hp').measure(partial)['available'])
+
+    def test_hp_color_change_and_layout_change(self):
+        full = np.full((8,100,3),(0,180,0),dtype=np.uint8)
+        low = np.full_like(full,30)
+        low[:,:20] = (0,0,180)
+        model = FillEvidence(full,'hp')
+        result = model.measure(low)
+        self.assertTrue(result['lower_percent'] <= 20 <= result['upper_percent'])
+        self.assertFalse(model.measure(low[:,:80])['available'])
+
+    def test_sidebar_colored_bevel_is_not_fill(self):
+        full = np.full((10,100,3),(180,0,0),dtype=np.uint8)
+        partial = full.copy()
+        partial[4:6,30:] = 30
+        result = FillEvidence(full,'mp',sidebar=True).measure(partial)
+        self.assertTrue(result['available'])
+        self.assertLess(result['upper_percent'],40)
+
+
+if __name__ == '__main__':
+    unittest.main()

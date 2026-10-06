@@ -5,6 +5,8 @@ import time
 import cv2
 import numpy as np
 from test_side_counters import locate
+from benchmark_hp_mp import crop_bar
+from bar_fill import FillEvidence, validate_fill
 
 
 def side_image(crop):
@@ -81,7 +83,7 @@ class ConfirmationGate:
         value = reading.get('value')
         if reading.get('verification') != 'current_agrees' or value is None:
             self.previous = None
-            result.update(candidate_value=value, value=None, quality='unconfirmed',
+            result.update(candidate_value=value or reading.get('candidate_value'), value=None, quality='unconfirmed',
                           confirmation='sources_not_agreed')
             return result
         key = (value['current'], value['maximum'])
@@ -131,6 +133,10 @@ class DualAnalyzer:
                for i in range(2)):
             raise RuntimeError(f'Kalibracja bocznych liczb niezgodna z gora: {side}. '
                                'Pokaz pelne HP/MP bez popupow i uruchom ponownie.')
+        self.fill_models = [
+            {'top':FillEvidence(crop_bar(frame,self.top.rectangles[i]), resource),
+             'sidebar':FillEvidence(crop_bar(frame,self.side_bars[i]), resource, sidebar=True)}
+            for i,resource in enumerate(('hp','mp'))]
         cadence = 'kazda klatka + potwierdzenie kolejnej' if self.strict else '2/s'
         print(f'Boczne HP/MP: {self.boxes}; zgodne z gora. Weryfikacja {cadence}.', flush=True)
         return {'side_rectangles': self.boxes, 'side_readings': side}
@@ -164,6 +170,10 @@ class DualAnalyzer:
         else:
             combined = [combine(r,None,False) for r in readings]
         if self.strict:
+            combined = [validate_fill(r, {
+                'top':self.fill_models[i]['top'].measure(crop_bar(frame,self.top.rectangles[i])),
+                'sidebar':self.fill_models[i]['sidebar'].measure(crop_bar(frame,self.side_bars[i]))})
+                for i,r in enumerate(combined)]
             now = self.clock()
             combined = [gate.apply(r, now) for gate, r in zip(self.confirmations, combined)]
         analysis.update(readings=combined, side_ms=side_ms, side_checked=due,

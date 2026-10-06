@@ -22,6 +22,20 @@ class DatasetCapture:
         self.count = 0
         self.error = None
 
+    def calibrate(self, frame, top_boxes, side_bars):
+        try:
+            folder = self.folder/'calibration'
+            folder.mkdir(parents=True,exist_ok=False)
+            for i,resource in enumerate(('hp','mp')):
+                for kind,boxes in [('top_original',top_boxes),('side_bar',side_bars)]:
+                    ok,encoded = cv2.imencode('.png',crop_bar(frame,boxes[i]))
+                    if not ok:
+                        raise OSError('Calibration PNG encoding failed')
+                    encoded.tofile(folder/f'{resource}_{kind}.png')
+        except (OSError,ValueError,cv2.error) as error:
+            self.error = str(error)
+            print(f'Zapis datasetu wylaczony: {error}',flush=True)
+
     def capture(self, frame, analysis, top_boxes, side_boxes, side_bars):
         now = self.clock()
         if self.error or self.count >= self.limit or now-self.last < self.interval:
@@ -79,6 +93,9 @@ class DatasetCapture:
         with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as output:
             # Exclude incomplete samples after a write failure.
             output.write(self.folder/'labels.csv', 'labels.csv')
+            if (self.folder/'calibration').is_dir():
+                for file in sorted((self.folder/'calibration').iterdir()):
+                    output.write(file,file.relative_to(self.folder))
             for index in range(self.count):
                 for file in sorted((self.folder/f'case_{index:05d}').iterdir()):
                     output.write(file, file.relative_to(self.folder))

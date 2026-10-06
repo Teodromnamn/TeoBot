@@ -96,8 +96,8 @@ Strict verification forces sidebar OCR on every analyzed frame and only exposes
 an exact value after two consecutive frames agree across both sources on the
 same current AND top maximum, separated by at most 250 ms. Any missing source,
 conflict, value change or longer gap resets confirmation. This is not a guarantee
-of correctness: both OCR paths use Tesseract and can share errors. Color fill
-verification is not implemented by this flag. Covered top bars cannot produce a
+of correctness: both OCR paths use Tesseract and can share errors. Calibrated
+color-fill consistency is now required by this flag. Covered top bars cannot produce a
 confirmed strict value even if sidebar digits are readable.
 
 Dataset capture samples analyzed frames at up to 5/s, capped at 2000. It stores
@@ -118,3 +118,30 @@ Replay reports source agreements and errors against filled manual labels.
 Blank labels are excluded from accuracy counts; agreements without truth labels
 are not accuracy. It does not simulate live expiry, temporal confirmation or
 actions. All screenshots and labels remain outside the repository.
+
+Strict color check measures contiguous fill intervals on both top and sidebar
+bars before temporal confirmation. It permits top HP color changes, excludes
+the permanently colored sidebar bevel, and uses two pixels of top rounding
+margin / three sidebar pixels. A readable candidate must fit every available
+interval; at least one interval must be available. Noncontiguous fill, disagreeing
+rows, missing calibration or changed image shape can make color evidence unknown.
+Color is never converted to an exact current value or used to correct OCR.
+Some occlusions can resemble empty or colored pixels, so this is a consistency
+check, not a universal occlusion detector or correctness guarantee. Both source
+OCR agreements and temporal confirmation remain required in strict mode.
+latest.json now includes fill evidence, fill_status and confirmation.
+
+Capture includes actual full-bar calibration crops for future color replays.
+For earlier datasets without calibration crops, --color-check uses the first
+sample; independently check that its bars are full before interpreting results.
+
+```bash
+python tools/obs_monitor/replay_hp_mp_dataset.py ocr_dataset_TIMESTAMP.zip --color-check > replay_color.jsonl
+```
+
+Validation on 791 recorded samples: among 1,430 recorded resource-level current
+agreements, color agreed with 1,423 and rejected 7. Six had visually corrupted
+HP maxima; one had a visibly occluded sidebar MP bar. This is a consistency
+result, not measured accuracy on all samples. Full Tesseract replay also ran on
+all 1,582 resource crops without errors. Regression suite: 28 tests, including
+repeated wrong maximum rejection and the colored sidebar bevel.

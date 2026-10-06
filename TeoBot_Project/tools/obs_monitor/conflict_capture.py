@@ -11,6 +11,7 @@ from dual_source import side_image
 
 def diagnostic_needed(reading):
     return (reading.get('verification') == 'conflict' or
+            reading.get('fill_status') in ('conflict','unavailable') or
             (reading.get('side') or {}).get('reason') == 'digit_count_mismatch')
 
 

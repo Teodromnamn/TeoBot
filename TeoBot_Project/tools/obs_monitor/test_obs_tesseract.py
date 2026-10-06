@@ -138,6 +138,11 @@ def main():
         if args.verify_side:
             from dual_source import DualAnalyzer
             class RecordingDualAnalyzer(DualAnalyzer):
+                def calibrate(self, frame, readings, guards):
+                    result=super().calibrate(frame,readings,guards)
+                    if dataset is not None:
+                        dataset.calibrate(frame,self.top.rectangles,self.side_bars)
+                    return result
                 def analyze(self, frame):
                     result=super().analyze(frame)
                     if recorder is not None:
