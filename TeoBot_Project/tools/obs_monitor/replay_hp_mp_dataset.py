@@ -94,7 +94,7 @@ def main():
                         side = saved[(case,resource)]['side']
                     else:
                         raw_top=image('top_original')
-                        top = recognize_top(engine,binary(prepare(raw_top,'dynamic')),args.resilient_verification,raw_crop=raw_top)
+                        top = recognize_top(engine,binary(prepare(raw_top,'dynamic')),args.resilient_verification,raw_crop=raw_top,resource=resource)
                         side = recognize_side(engine,image('side_original'),args.resilient_verification)
                     value = top['value']
                     agreement = value is not None and side['current'] == value['current']

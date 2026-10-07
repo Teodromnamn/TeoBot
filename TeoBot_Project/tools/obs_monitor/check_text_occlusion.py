@@ -36,3 +36,27 @@ class MaximumTests(unittest.TestCase):
         self.assertIsNone(r['value']['maximum'])
         guard.update(r['value'])
         self.assertEqual(guard.maximum,200)
+
+class ColoredTests(unittest.TestCase):
+    def test_brown_object_crossing_maximum_blocks_ocr(self):
+        crop=np.full((14,770,3),(0,210,0),np.uint8)
+        crop[3:11,403:410]=[45,110,175]
+        r=inspect_top_text(crop)
+        self.assertTrue(r['occluded'])
+        self.assertEqual(r['reason'],'foreign_colored_object')
+        engine=Mock();result=recognize_top(engine,np.zeros((10,10),np.uint8),True,raw_crop=crop)
+        engine.recognize.assert_not_called()
+        self.assertIsNone(result['value'])
+    def test_filled_empty_background_and_white_antialias_allowed(self):
+        crop=np.full((14,770,3),30,np.uint8);crop[:,:390]=[0,210,0]
+        crop[3:11,370:373]=[100,230,100]
+        self.assertFalse(inspect_top_text(crop)['occluded'])
+    def test_colored_mp_suffix_does_not_block_main_ratio(self):
+        crop=np.full((14,770,3),(180,60,0),np.uint8)
+        crop[3:11,422:430]=[0,180,220]
+        self.assertFalse(inspect_top_text(crop)['occluded'])
+
+    def test_wide_mp_single_digit_ratio_suffix_is_not_overlay(self):
+        crop=np.full((14,858,3),(180,60,0),np.uint8)
+        crop[4:10,458:464]=[0,180,220]
+        self.assertFalse(inspect_top_text(crop,'mp')['occluded'])

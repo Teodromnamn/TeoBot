@@ -156,6 +156,7 @@ def publish(path, status, readings=None, age_ms=None, max_age_ms=5000, bar_statu
             'verified_current': bool(valid and reading.get('verification') in ('current_agrees','current_agrees_without_color')),
             'confirmation': reading.get('confirmation') if fresh else None,
             'fill_status': reading.get('fill_status') if fresh else None,
+            'text_occlusion':reading.get('text_occlusion'),
             'fill': reading.get('fill') if fresh else None,
             'value': value if valid else None,
             'effective_maximum':effective_maximum, 'effective_percent':effective_percent,
@@ -505,7 +506,9 @@ def main():
                     print(f'{status} | SUROWY HP={readings[0]["value"]} | '
                           f'SUROWY MP={readings[1]["value"]} | '
                           f'HP/MP check={[r.get("verification", "not_checked") for r in readings]} | '
-                          f'OCR={row["ocr_ms"]:.1f} ms | wiek wyniku={result_age:.1f} ms', flush=True)
+                          f'OCR={row["ocr_ms"]:.1f} ms | wiek wyniku={result_age:.1f} ms | '
+                          f'TEKST={[r.get("text_occlusion",{}).get("status","NIESPRAWDZONY") for r in readings]} | '
+                          f'POWOD={[r.get("text_occlusion",{}).get("reason") for r in readings]}', flush=True)
                     log_time = end
                 if args.preview:
                     strip = np.vstack([cv2.resize(crop_bar(frame, rect), (800, 40)) for rect in pair])
