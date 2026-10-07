@@ -124,3 +124,12 @@ class TransitionTests(unittest.TestCase):
         gate.apply(r,1.)
         changed=dict(r,value=dict(r['value'],maximum=196))
         self.assertIsNone(gate.apply(changed,1.1)['value'])
+
+class CoveredMaximumTests(unittest.TestCase):
+    def test_changed_maximum_with_covered_top_uses_cached_side(self):
+        r=select_source({'value':{'current':210,'maximum':218}}, {'current':210},
+            {'top':{'available':False,'reason':'neutral_overlay'},
+             'sidebar':{'available':True,'lower_percent':96.27,'upper_percent':100}},210)
+        self.assertEqual(r['value']['current'],210)
+        self.assertIsNone(r['value']['maximum'])
+        self.assertEqual(r['value']['last_confirmed_maximum'],210)

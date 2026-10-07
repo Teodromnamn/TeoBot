@@ -16,6 +16,12 @@ def select_source(top, side, evidence, cached_maximum):
     # A sidebar does not observe maximum. Expose only its current value;
     # the last confirmed maximum is used for a consistency check, not as truth.
     side_ok = sc is not None and fits(sc,cached_maximum,evidence)
+    # A broad sidebar interval cannot verify a changed top maximum when its
+    # own bar is occluded. Keep the cached maximum and independently read side.
+    maximum_change_unverified = (tv is not None and cached_maximum is not None
+        and tv['maximum'] != cached_maximum and not evidence.get('top',{}).get('available'))
+    if maximum_change_unverified:
+        top_ok = False
     result = dict(top,side=side,fill=evidence,value=None,source=None,
                   quality='unconfirmed',verification='unresolved',
                   fill_status='unavailable' if not any(e.get('available') for e in evidence.values()) else 'conflict',
@@ -49,6 +55,8 @@ def select_source(top, side, evidence, cached_maximum):
                              'maximum_source':'cached_top_text'},
                       source='side_text',quality='current_only',
                       verification='side_color_supported',fill_status='consistent')
+    if maximum_change_unverified:
+        result['maximum_update_blocked']='top_color_unavailable'
     return result
 
 
