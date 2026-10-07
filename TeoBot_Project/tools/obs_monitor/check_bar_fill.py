@@ -75,3 +75,23 @@ class Tests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+class ManaDirectionTests(unittest.TestCase):
+    def test_top_mana_right_fill_and_sidebar_left_fill(self):
+        full=np.full((14,100,3),(180,60,0),np.uint8)
+        for sidebar in [False,True]:
+            image=np.full_like(full,30)
+            if sidebar:image[:,:20]=full[:,:20]
+            else:image[:,80:]=full[:,80:]
+            result=FillEvidence(full,'mp',sidebar=sidebar).measure(image)
+            self.assertTrue(result['available'])
+            self.assertLessEqual(result['lower_percent'],20)
+            self.assertGreaterEqual(result['upper_percent'],20)
+            self.assertLess(result['upper_percent'],30)
+    def test_bevel_joining_counter_is_not_overlay(self):
+        full=np.full((14,100,3),(0,180,0),np.uint8)
+        full[:2,:]=150
+        image=full.copy();image[:,50:]=30
+        image[:2,:]=150
+        image[2:11,40:42]=255
+        self.assertTrue(FillEvidence(full,'hp').measure(image)['available'])

@@ -38,9 +38,10 @@ class FillEvidence:
             # Broad bright neutral content is foreign to the dark bar background;
             # narrow white counter glyphs must not trigger this rejection.
             neutral_full=((saturation < 80) & (value > 100)).astype(np.uint8)
+            neutral_full[:2]=0;neutral_full[-2:]=0
             count,_,stats,_=cv2.connectedComponentsWithStats(neutral_full,8)
             for x,y,w,h,area in stats[1:]:
-                if h >= image.shape[0]*.85 and w >= 4 and area >= image.shape[0]*3:
+                if h >= max(6,image.shape[0]-4) and w >= 4 and area >= image.shape[0]*3:
                     return {'available':False,'reason':'neutral_overlay'}
             neutral=(saturation[self.rows] < 45) & (value[self.rows] > 125)
             if np.count_nonzero(neutral) > neutral.size*.10:
@@ -57,6 +58,9 @@ class FillEvidence:
         boundaries = []
         for row in self.rows:
             pixels = mask[row]
+            # Top mana fills from the right; sidebar mana fills from the left.
+            if self.resource == 'mp' and not self.sidebar:
+                pixels = pixels[::-1]
             prefix = np.r_[0, np.cumsum(pixels)]
             # Fit a single contiguous fill from the left; holes/tails create error.
             errors = np.arange(width+1)+prefix[-1]-2*prefix
@@ -69,6 +73,9 @@ class FillEvidence:
             return {'available':False, 'reason':'rows_disagree'}
         # Short sidebar bars include bevel/rounding: reserve three pixels there.
         margin = (3 if self.sidebar else 2) + .5
+        if self.resource == 'mp' and not self.sidebar:
+            # Saturation at the shaded top mana edge changes its visible extent.
+            margin = max(margin,width*.02)
         return {'available':True,
                 'lower_percent':100*max(0,min(boundaries)-margin)/width,
                 'upper_percent':100*min(width,max(boundaries)+margin)/width,
