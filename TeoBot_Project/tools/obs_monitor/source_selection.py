@@ -29,6 +29,19 @@ def select_source(top, side, evidence, cached_maximum):
                   quality='unconfirmed',verification='unresolved',
                   fill_status='unavailable' if not any(e.get('available') for e in evidence.values()) else 'conflict',
                   source_checks={'top_color_consistent':top_ok,'side_color_consistent':side_ok})
+    # New maximum remains uncommitted, but matching current counters can still
+    # be exact. Validate the observed ratio against color, retain cached maximum
+    # only as history (it may be smaller than current after a genuine level-up).
+    if (maximum_change_unverified and tv['current'] == sc and not side.get('reason')
+            and fits(tv['current'],tv['maximum'],evidence)):
+        result.update(value={'current':sc,'maximum':None,'percent':None,
+                             'last_confirmed_maximum':cached_maximum,
+                             'estimated_percent':100*sc/cached_maximum,
+                             'maximum_source':'cached_top_text'},
+                      source='top_and_side_text',quality='current_only',
+                      verification='current_agrees',fill_status='consistent',
+                      maximum_update_blocked='changed_maximum_not_verified_at_full_resource')
+        return result
     # Two independently readable counters can support current while both bars
     # are explicitly unavailable. Never ignore a PRESENT conflicting interval,
     # and never learn a new maximum through this fallback.

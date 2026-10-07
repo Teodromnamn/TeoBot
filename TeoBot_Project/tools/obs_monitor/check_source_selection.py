@@ -146,3 +146,11 @@ class MaximumChangeFullResourceTests(unittest.TestCase):
             {'top':{'available':True,'lower_percent':99,'upper_percent':100},
              'sidebar':{'available':True,'lower_percent':96,'upper_percent':100}},195)
         self.assertEqual(r['value']['maximum'],200)
+
+    def test_current_above_cached_maximum_remains_readable_until_refill(self):
+        r=select_source({'value':{'current':199,'maximum':205}}, {'current':199},
+            {'top':{'available':True,'lower_percent':96.5,'upper_percent':97.2},
+             'sidebar':{'available':True,'lower_percent':94,'upper_percent':100}},195)
+        self.assertEqual(r['value']['current'],199)
+        self.assertIsNone(r['value']['maximum'])
+        self.assertEqual(r['value']['last_confirmed_maximum'],195)
