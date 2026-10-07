@@ -120,16 +120,23 @@ def result_status(marker_status, age, elapsed_ms, statuses):
     return 'OK'
 
 
+_result_publisher = None
+
+def current_result():
+    return _result_publisher.current() if _result_publisher is not None else {}
+
 def publish(path, status, readings=None, age_ms=None, max_age_ms=5000, bar_statuses=None, slow_age_ms=250, window_state=None):
     """Publish each resource independently; retain history without refreshing it."""
     now_ms = time.time_ns() // 1000000
     fresh = (status in ('OK', 'BRAK_ODCZYTU', 'POTWIERDZANIE_MAKSIMUM', 'KONFLIKT_ZRODEL')
              and age_ms is not None and 0 <= age_ms <= max_age_ms)
-    previous = {}
-    try:
-        previous = json.loads(path.read_text(encoding='utf-8'))
-    except (OSError, ValueError):
-        pass
+    publisher = _result_publisher if _result_publisher is not None and _result_publisher.path == Path(path) else None
+    previous = publisher.snapshot() if publisher is not None else {}
+    if publisher is None:
+        try:
+            previous = json.loads(path.read_text(encoding='utf-8'))
+        except (OSError, ValueError):
+            pass
     data = {'schema': 2, 'status': status, 'published_at_unix_ms': now_ms,
             'result_age_ms': age_ms,
             'slow_reading': age_ms is not None and age_ms > slow_age_ms,
@@ -169,6 +176,9 @@ def publish(path, status, readings=None, age_ms=None, max_age_ms=5000, bar_statu
     data['resources'] = resources
     data['valid'] = all(r['valid'] for r in resources.values())
     data['expires_at_unix_ms'] = min(r['expires_at_unix_ms'] for r in resources.values())
+    if publisher is not None:
+        publisher.submit(data)
+        return
     temporary = path.with_suffix('.tmp')
     temporary.write_text(json.dumps(data, indent=2), encoding='utf-8')
     temporary.replace(path)
@@ -289,6 +299,7 @@ def cached_threads(path, key):
 
 
 def main():
+    global _result_publisher
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--threads', choices=['auto', '1', '2', '4'], default='auto')
     parser.add_argument('--target-fps', type=float, default=10, help='Docelowa liczba odczytow pary na sekunde')
@@ -319,6 +330,8 @@ def main():
     rows = []
     events = []
     latest_path = output / 'latest.json'
+    from result_publisher import ResultPublisher
+    _result_publisher = ResultPublisher(latest_path)
     publish(latest_path, 'URUCHAMIANIE')
     try:
         camera.get()
@@ -557,6 +570,10 @@ def main():
         camera.thread.join(timeout=3)
         cv2.destroyAllWindows()
         publish(latest_path, 'ZATRZYMANY_PROGRAM')
+        if not _result_publisher.close():
+            print('Zapis diagnostyczny nadal trwa; wynik w pamieci uniewazniony.',flush=True)
+        if _result_publisher.error:
+            print('Blad zapisu diagnostycznego: '+_result_publisher.error,flush=True)
 
 
 if __name__ == '__main__':

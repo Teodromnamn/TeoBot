@@ -326,3 +326,14 @@ Maximum-change policy (supersedes the earlier top-color-only guard): a changed m
 Native text preflight also rejects solid nearly neutral gray components (value100..239, width>=3, height>=6, rectangular occupancy>=95%) inside the counter area, excluding bevel rows. This detects flat synthetic gray occluders without treating white glyph cores as such; textured/dark/blended real objects are not guaranteed detectable.
 
 During deferred maximum changes, matching top/sidebar current counters remain usable when the observed top ratio fits all available color evidence. Publish current with maximum=None and last_confirmed_maximum, without learning the observed changed maximum. Estimated percentage using the cached maximum can temporarily exceed100 after a level-up; it is an estimate, not a newly measured maximum. Full-resource confirmation still governs cache updates.
+
+Live publication uses ResultPublisher: an in-process immutable copy is available
+through test_obs_pipeline.current_result(), with resource expiry checked on read.
+latest.json is diagnostic output, written on one background thread with one pending
+slot (new snapshots replace pending older snapshots). The writer never queues all
+samples. Only the analysis thread builds snapshots and updates retained history.
+Minimize/missing/stopped statuses invalidate the memory result immediately.
+Shutdown requests a final invalid diagnostic snapshot and waits at most 2 seconds;
+a hung disk can leave the file stale, so external readers must enforce its expiry.
+A future action consumer should use current_result() in the same process, not poll
+latest.json. This change does not itself connect any action consumer or send input.
