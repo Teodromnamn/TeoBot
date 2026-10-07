@@ -37,6 +37,15 @@ def inspect_top_text(crop, resource=None):
         if area>=20 and w>=4 and h>=4:
             return {'occluded':True,'status':'ZASLONIETY','reason':'foreign_colored_object',
                     'rectangle':[left+int(x),int(y),int(w),int(h)],'foreign_pixels':int(area)}
+    # Flat gray rectangles are foreign UI fragments, unlike curved glyph ink.
+    # Exclude white cores and dark background; inspect connected pixels only.
+    gray=((sat<5)&(val>=100)&(val<240)).astype(np.uint8)
+    gray[:2]=0;gray[-2:]=0
+    _,_,flat,_=cv2.connectedComponentsWithStats(gray,8)
+    for x,y,w,h,area in flat[1:]:
+        if w>=3 and h>=6 and area>=w*h*.95:
+            return {'occluded':True,'status':'ZASLONIETY','reason':'flat_gray_text_overlay',
+                    'rectangle':[left+int(x),int(y),int(w),int(h)]}
     neutral=((sat<80)&(val>100)).astype(np.uint8)
     # The neutral beveled rim can connect otherwise normal glyphs.
     neutral[:2]=0;neutral[-2:]=0

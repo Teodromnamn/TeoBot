@@ -60,3 +60,10 @@ class ColoredTests(unittest.TestCase):
         crop=np.full((14,858,3),(180,60,0),np.uint8)
         crop[4:10,458:464]=[0,180,220]
         self.assertFalse(inspect_top_text(crop,'mp')['occluded'])
+
+    def test_thin_flat_gray_fragment_crossing_text_is_occluded(self):
+        crop=np.full((14,858,3),(0,180,0),np.uint8)
+        crop[3:11,414:417]=220
+        r=inspect_top_text(crop,'hp')
+        self.assertTrue(r['occluded'])
+        self.assertEqual(r['reason'],'flat_gray_text_overlay')

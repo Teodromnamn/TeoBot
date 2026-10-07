@@ -133,3 +133,16 @@ class CoveredMaximumTests(unittest.TestCase):
         self.assertEqual(r['value']['current'],210)
         self.assertIsNone(r['value']['maximum'])
         self.assertEqual(r['value']['last_confirmed_maximum'],210)
+
+class MaximumChangeFullResourceTests(unittest.TestCase):
+    def test_small_maximum_misread_at_low_hp_never_updates_cache(self):
+        r=select_source({'value':{'current':57,'maximum':193}}, {'current':57},
+            {'top':{'available':True,'lower_percent':28.8,'upper_percent':30.1},
+             'sidebar':{'available':True,'lower_percent':26,'upper_percent':34}},195)
+        self.assertIsNone(r['value']['maximum'])
+        self.assertEqual(r['value']['last_confirmed_maximum'],195)
+    def test_genuine_full_resource_change_is_allowed(self):
+        r=select_source({'value':{'current':200,'maximum':200}}, {'current':200},
+            {'top':{'available':True,'lower_percent':99,'upper_percent':100},
+             'sidebar':{'available':True,'lower_percent':96,'upper_percent':100}},195)
+        self.assertEqual(r['value']['maximum'],200)
