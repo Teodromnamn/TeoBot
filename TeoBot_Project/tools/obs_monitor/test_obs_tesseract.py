@@ -205,5 +205,11 @@ def main():
 
 
 if __name__=='__main__':
-    try:main()
+    try:
+        if '--dashboard' in sys.argv:
+            sys.argv.remove('--dashboard')
+            from monitor_dashboard import run_dashboard
+            run_dashboard(main, pipeline)
+        else:
+            main()
     except KeyboardInterrupt:print('Przerwano.')

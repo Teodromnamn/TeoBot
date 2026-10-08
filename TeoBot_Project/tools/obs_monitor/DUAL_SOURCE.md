@@ -337,3 +337,31 @@ Shutdown requests a final invalid diagnostic snapshot and waits at most 2 second
 a hung disk can leave the file stale, so external readers must enforce its expiry.
 A future action consumer should use current_result() in the same process, not poll
 latest.json. This change does not itself connect any action consumer or send input.
+
+### Panel diagnostyczny i kalibracja w trakcie pracy
+
+Uruchom z katalogu TeoBot_Project (gra i kamera OBS potrzebne):
+
+```bash
+/c/_MS/GIT/TeoBot_OCR_venv/Scripts/python.exe -X utf8 tools/obs_monitor/test_obs_tesseract.py --dashboard --resilient-verification --threads 2 --target-fps 10 --seconds 1800 --max-age-ms 5000 --slow-age-ms 250
+```
+
+Pierwsza kalibracja nadal odbywa sie przez ENTER w konsoli. Panel pokazuje niezaleznie
+potwierdzone HP/MP, procent, zrodlo, wiek, zasloniecie gornego tekstu i zapamietane
+maksimum. Wskaznik /s liczy aktualizacje publikacji z dostepnym odczytem w ostatnich
+5 sekundach, nie FPS kamery ani zmiany HP. Panel odswieza sie co 100 ms.
+
+Po przesunieciu paskow lub zmianie rozmiaru okna pokaz pelne HP/MP i kliknij
+"Ponowna kalibracja". Biezace wyniki zostaja zablokowane; monitor buduje nowy
+analizator i sprawdza zgodnosc bocznych liczb z gora. Nieudana proba pozostaje
+zablokowana do ponownego klikniecia. Udana proba resetuje potwierdzanie; pierwsze
+wartosci musza zostac potwierdzone od nowa. Diagnostyka zapisana w recalibration.json
+oraz events.json. Przycisk Zatrzymaj konczy pomiar i zapisuje podsumowanie.
+Jesli monitor jest jeszcze w poczatkowym pytaniu konsoli, trzeba nacisnac ENTER,
+aby zwolnic oczekujacy input; panel o tym informuje podczas zamykania.
+
+Test bez gry/OBS i bez tworzenia okna:
+
+```bash
+/c/_MS/GIT/TeoBot_OCR_venv/Scripts/python.exe -X utf8 tools/obs_monitor/check_monitor_dashboard.py
+```

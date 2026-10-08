@@ -122,7 +122,11 @@ def result_status(marker_status, age, elapsed_ms, statuses):
 
 _result_publisher = None
 
+monitor_control = None
+
 def current_result():
+    if monitor_control is not None and monitor_control.paused.is_set():
+        return {"status": "KALIBRACJA", "valid": False, "resources": {}}
     return _result_publisher.current() if _result_publisher is not None else {}
 
 def publish(path, status, readings=None, age_ms=None, max_age_ms=5000, bar_statuses=None, slow_age_ms=250, window_state=None):
@@ -415,7 +419,7 @@ def main():
         cpu_start = time.process_time()
         print('Test: graj, zmieniaj HP/MP; zachowaj uklad UI. Ctrl+C konczy i zapisuje wyniki.')
         try:
-            while time.perf_counter()-start < args.seconds:
+            while time.perf_counter()-start < args.seconds and not (monitor_control and monitor_control.stop.is_set()):
                 delay = min(next_due, start+args.seconds)-time.perf_counter()
                 if delay > 0:
                     time.sleep(delay)
@@ -462,6 +466,25 @@ def main():
                         print(f'{marker_status}: dane niewazne', flush=True)
                         log_time = analysis_start
                     continue
+                if monitor_control is not None and monitor_control.paused.is_set():
+                    publish(latest_path, 'KALIBRACJA')
+                    if monitor_control.take_request():
+                        from monitor_dashboard import recalibrate
+                        try:
+                            new_pair, new_guards, new_analyzer, new_readings, new_side = recalibrate(
+                                frame, engine,
+                                lambda f: _tibia_top_pair(cv2.cvtColor(f, cv2.COLOR_BGR2RGB)),
+                                read_pair, HpMpAnalyzer, ConfirmMaximum)
+                            calibration = {'rectangles': new_pair, 'frame_shape': frame.shape,
+                                           'readings': new_readings, 'side': new_side}
+                            (output / 'recalibration.json').write_text(json.dumps(calibration, indent=2), encoding='utf-8')
+                            pair, guards, hp_analyzer = new_pair, new_guards, new_analyzer
+                            events.append({'elapsed_s': time.perf_counter()-start, 'status': 'KALIBRACJA_OK'})
+                            monitor_control.finish_calibration()
+                        except Exception as error:
+                            monitor_control.finish_calibration(error)
+                            events.append({'elapsed_s': time.perf_counter()-start, 'status': 'KALIBRACJA_BLAD', 'reason': str(error)})
+                    continue
                 analysis = hp_analyzer.analyze(frame)
                 readings = analysis['readings']
                 end = time.perf_counter()
@@ -490,6 +513,8 @@ def main():
                     if hasattr(hp_analyzer,'confirmations'):
                         for gate in hp_analyzer.confirmations:
                             gate.previous=None;gate.previous_verified_pair=False
+                if monitor_control is not None and monitor_control.paused.is_set():
+                    status = 'KALIBRACJA'
                 publish(latest_path, status, readings, result_age, args.max_age_ms, statuses,args.slow_age_ms,window_state)
                 row = {'sequence': seq, 'elapsed_s': end-start,
                        'status': status, 'valid': status == 'OK',
