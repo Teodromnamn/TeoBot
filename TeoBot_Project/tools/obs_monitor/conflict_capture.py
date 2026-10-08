@@ -12,7 +12,9 @@ from dual_source import side_image
 def diagnostic_needed(reading):
     return (reading.get('verification') == 'conflict' or
             reading.get('fill_status') in ('conflict','unavailable') or
-            (reading.get('side') or {}).get('reason') in ('digit_count_mismatch','foreign_color_overlay'))
+            (reading.get('side') or {}).get('reason') in ('digit_count_mismatch','foreign_color_overlay') or
+            ('value' in reading and reading['value'] is None and
+             reading.get('confirmation') != 'waiting_second_frame'))
 
 
 class ConflictCapture:
@@ -26,7 +28,7 @@ class ConflictCapture:
         self.count = 0
         self.error = None
 
-    def capture(self, frame, analysis, top_boxes, side_boxes, binary):
+    def capture(self, frame, analysis, top_boxes, side_boxes, binary, side_bar_boxes=None):
         now = self.clock()
         readings = analysis['readings']
         if not any(diagnostic_needed(r) for r in readings):
@@ -34,7 +36,7 @@ class ConflictCapture:
         if self.error or self.count >= self.limit or now-self.last < .5:
             return False
         # Two examples of each raw disagreement, at least five seconds apart.
-        signature = json.dumps([(i, r.get('raw'), r.get('side', {}).get('raw'))
+        signature = json.dumps([(i, r.get('raw'), (r.get('side') or {}).get('raw'), r.get('confirmation'), r.get('reason'))
                                 for i,r in enumerate(readings)
                                 if diagnostic_needed(r)], sort_keys=True)
         occurrences, last = self.seen.get(signature, (0, float('-inf')))
@@ -50,6 +52,8 @@ class ConflictCapture:
                 images = {'top_original':top, 'top_prepared':prepared,
                           'top_binary':binary(prepared), 'side_original':side,
                           'side_binary':side_image(side)}
+                if side_bar_boxes is not None:
+                    images['side_bar'] = crop_bar(frame, side_bar_boxes[index])
                 for name, image in images.items():
                     ok, encoded = cv2.imencode('.png', image)
                     if not ok:
@@ -58,6 +62,7 @@ class ConflictCapture:
             metadata = {'saved_at_unix_ms':time.time_ns()//1000000,
                         'elapsed_s':now-self.started, 'frame_shape':list(frame.shape),
                         'top_rectangles':top_boxes, 'side_rectangles':side_boxes,
+                        'side_bar_rectangles':side_bar_boxes,
                         'analysis':analysis,
                         'side_preprocessing':'tight_cubic4_threshold120_border16_psm8_digit_count',
                         'note':'Both sources from one analyzed frame. Preprocessing replayed deterministically; no extra OCR. Readings are not ground-truth labels.'}

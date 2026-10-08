@@ -179,7 +179,7 @@ def main():
                     result=super().analyze(frame)
                     if recorder is not None:
                         begin=time.perf_counter()
-                        recorder.capture(frame,result,self.top.rectangles,self.boxes,binary)
+                        recorder.capture(frame,result,self.top.rectangles,self.boxes,binary,self.side_bars)
                         result['diagnostic_ms']=(time.perf_counter()-begin)*1000
                     if dataset is not None:
                         begin=time.perf_counter()

@@ -17,6 +17,25 @@ class Tests(unittest.TestCase):
         self.assertFalse(diagnostic_needed({'verification':'side_unreadable',
                                            'side':{'reason':'unreadable'}}))
 
+    def test_missing_value_captured_but_normal_confirmation_wait_excluded(self):
+        self.assertTrue(diagnostic_needed({'value':None, 'confirmation':'sources_not_agreed'}))
+        self.assertFalse(diagnostic_needed({'value':None, 'confirmation':'waiting_second_frame'}))
+        self.assertTrue(diagnostic_needed({'value':None, 'side':None}))
+
+    def test_side_fill_crop_saved_from_same_frame(self):
+        frame = np.full((30,60,3),170,dtype=np.uint8)
+        frame[15:20,30:40] = (255,0,0)
+        boxes = [(0,0,20,10),(0,10,20,10)]
+        bars = [(30,15,10,5),(30,15,10,5)]
+        analysis = {'readings':[{'value':None,'side':None},{'value':None,'side':None}]}
+        with tempfile.TemporaryDirectory() as folder:
+            recorder = ConflictCapture(Path(folder)/'cases')
+            self.assertTrue(recorder.capture(frame,analysis,boxes,boxes,binary,bars))
+            image = cv2.imread(str(Path(folder)/'cases/case_000/mp_side_bar.png'))
+            np.testing.assert_array_equal(image,frame[15:20,30:40])
+            meta = json.loads((Path(folder)/'cases/case_000/reading.json').read_text())
+            self.assertEqual(meta['side_bar_rectangles'], [list(b) for b in bars])
+
     def test_limits_same_frame_crops_and_archive(self):
         now=[0.]
         frame=np.full((50,80,3),170,dtype=np.uint8)
