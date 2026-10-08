@@ -73,8 +73,6 @@ class Tests(unittest.TestCase):
         self.assertLess(result['upper_percent'],40)
 
 
-if __name__ == '__main__':
-    unittest.main()
 
 class ManaDirectionTests(unittest.TestCase):
     def test_top_mana_right_fill_and_sidebar_left_fill(self):
@@ -95,3 +93,28 @@ class ManaDirectionTests(unittest.TestCase):
         image[:2,:]=150
         image[2:11,40:42]=255
         self.assertTrue(FillEvidence(full,'hp').measure(image)['available'])
+
+class TopForeignOverlayTests(unittest.TestCase):
+    def test_mana_item_at_edge_is_unavailable(self):
+        full=np.full((14,770,3),(180,60,0),np.uint8)
+        image=np.full_like(full,30);image[:,337:]=full[:,337:]
+        image[:,334:350]=(0,180,180)
+        evidence=FillEvidence(full,'mp').measure(image)
+        self.assertFalse(evidence['available'])
+        self.assertEqual(evidence['reason'],'foreign_color_overlay')
+    def test_gold_suffix_does_not_hide_clean_mana_evidence(self):
+        full=np.full((14,770,3),(180,60,0),np.uint8)
+        image=np.full_like(full,30);image[:,337:]=full[:,337:]
+        image[4:10,424:428]=(0,180,180)
+        self.assertTrue(FillEvidence(full,'mp').measure(image)['available'])
+    def test_hp_color_changes_remain_valid_but_blue_item_is_unknown(self):
+        full=np.full((14,770,3),(0,180,0),np.uint8)
+        model=FillEvidence(full,'hp')
+        for color in [(0,0,180),(0,180,180)]:
+            image=np.full_like(full,30);image[:,:337]=color
+            self.assertTrue(model.measure(image)['available'])
+        image[:,330:345]=(180,60,0)
+        self.assertFalse(model.measure(image)['available'])
+
+if __name__ == '__main__':
+    unittest.main()

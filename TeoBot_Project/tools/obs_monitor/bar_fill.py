@@ -34,6 +34,17 @@ class FillEvidence:
             return {'available':False, 'reason':'layout_or_calibration'}
         hue,saturation,value=cv2.split(cv2.cvtColor(image,cv2.COLOR_BGR2HSV))
         if not self.sidebar:
+            # A colored item at the fill edge can still fit a shorter contiguous
+            # bar. Reject tall foreign-color objects before fitting that edge.
+            # Small gold mana suffix glyphs are normal and remain allowed.
+            foreign=((saturation > 90) & (value > 80) &
+                     ~color_mask(image, self.resource, self.sidebar)).astype(np.uint8)
+            _,_,objects,_=cv2.connectedComponentsWithStats(foreign,8)
+            for x,y,w,h,area in objects[1:]:
+                if (h >= max(6,image.shape[0]-4) and
+                    area >= image.shape[0]*3 and
+                    np.any((self.rows >= y) & (self.rows < y+h))):
+                    return {'available':False,'reason':'foreign_color_overlay'}
             # A gray tooltip can look like a perfectly contiguous empty tail.
             # Broad bright neutral content is foreign to the dark bar background;
             # narrow white counter glyphs must not trigger this rejection.
