@@ -57,6 +57,29 @@ class Tests(unittest.TestCase):
         self.assertFalse(evidence['available'])
         self.assertEqual(evidence['reason'],'foreign_color_overlay')
 
+    def test_sidebar_magenta_icon_above_body_invalidates_fill(self):
+        for resource,color in [('hp',(0,0,180)),('mp',(180,60,0))]:
+            full=np.full((10,100,3),color,dtype=np.uint8)
+            image=full.copy();image[:,65:]=30
+            image[:4,35:47]=(180,0,180)
+            image[4:8,35:47]=70
+            result=FillEvidence(full,resource,sidebar=True).measure(image)
+            self.assertFalse(result['available'])
+            self.assertEqual(result['reason'],'foreign_color_overlay')
+
+    def test_hp_blue_empty_background_is_not_an_icon(self):
+        full=np.full((10,100,3),(0,0,180),dtype=np.uint8)
+        partial=full.copy();partial[:,30:]=(130,80,40)
+        result=FillEvidence(full,'hp',sidebar=True).measure(partial)
+        self.assertTrue(result['available'])
+        self.assertLess(result['upper_percent'],40)
+
+    def test_sidebar_clean_partial_remains_available(self):
+        for resource,color in [('hp',(0,0,180)),('mp',(180,60,0))]:
+            full=np.full((10,100,3),color,dtype=np.uint8)
+            image=full.copy();image[:,65:]=30
+            self.assertTrue(FillEvidence(full,resource,sidebar=True).measure(image)['available'])
+
     def test_half_pixel_rounding_supports_boundary_without_large_tolerance(self):
         full=np.full((10,858,3),(0,180,0),dtype=np.uint8)
         partial=full.copy();partial[:,451:]=30

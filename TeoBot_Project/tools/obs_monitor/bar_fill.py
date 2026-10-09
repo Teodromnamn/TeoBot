@@ -64,6 +64,21 @@ class FillEvidence:
             foreign=(hue >= 15) & (hue <= 85) & (saturation > 90) & (value > 80)
             if np.count_nonzero(foreign) >= max(4,image.shape[0]*image.shape[1]*.01):
                 return {'available':False,'reason':'foreign_color_overlay'}
+            # Purple/blue item icons can hide HP, and magenta icons can hide
+            # mana, without containing enough green/yellow pixels. Check every
+            # hue foreign to this resource. A broad component is sufficient:
+            # an icon entering from above may end just before the measured rows,
+            # while its neutral border still covers the actual fill edge.
+            foreign=((saturation > 90) & (value > 80) &
+                     ~color_mask(image,self.resource,True)).astype(np.uint8)
+            if self.resource == 'hp':
+                # The native empty HP tail has a blue tint. It is background,
+                # not an icon; magenta/purple is outside this normal blue range.
+                foreign[(hue >= 95) & (hue <= 135)]=0
+            _,_,objects,_=cv2.connectedComponentsWithStats(foreign,8)
+            for x,y,w,h,area in objects[1:]:
+                if h >= 3 and area >= max(8,image.shape[0]*2):
+                    return {'available':False,'reason':'foreign_color_overlay'}
         mask = color_mask(image, self.resource, self.sidebar)
         width = mask.shape[1]
         boundaries = []
