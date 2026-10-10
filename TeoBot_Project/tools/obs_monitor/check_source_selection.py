@@ -34,10 +34,30 @@ class Tests(unittest.TestCase):
         self.assertIsNone(r['value'])
         self.assertEqual(r['verification'],'conflict')
 
-    def test_conflicting_visible_bars_and_unknown_color_block(self):
+    def test_matching_counters_and_top_fill_outvote_secondary_fill(self):
         e=evidence();e['sidebar']={'available':True,'lower_percent':0,'upper_percent':2}
-        self.assertIsNone(select_source(top(111),{'current':111},e,195)['value'])
+        result=select_source(top(111),{'current':111},e,195)
+        self.assertEqual(result['value']['current'],111)
+        self.assertTrue(result['source_checks']['sidebar_fill_ignored'])
+        self.assertIsNone(select_source(top(111),{'current':112},e,195)['value'])
         self.assertIsNone(select_source(top(111),{'current':111},{'top':{'available':False}},195)['value'])
+
+    def test_covered_side_cannot_veto_intact_top_pair(self):
+        e=evidence(99,100);e['sidebar']={'available':True,'lower_percent':92,'upper_percent':99.5}
+        result=select_source(top(195),{'current':None,'reason':'foreign_color_overlay'},e,195)
+        self.assertEqual(result['value']['current'],195)
+        self.assertTrue(result['source_checks']['sidebar_fill_ignored'])
+        gate=ConfirmationGate(allow_color_supported=True)
+        self.assertIsNone(gate.apply(result,1.)['value'])
+        self.assertEqual(gate.apply(result,1.1)['value']['current'],195)
+
+    def test_matching_counters_and_sidebar_pair_outvote_top_fill(self):
+        e={'top':{'available':True,'lower_percent':0,'upper_percent':2},
+           'sidebar':{'available':True,'lower_percent':55,'upper_percent':59}}
+        result=select_source(top(111),{'current':111},e,195)
+        self.assertEqual(result['value']['current'],111)
+        self.assertTrue(result['source_checks']['top_fill_ignored'])
+        self.assertIsNone(select_source(top(111),{'current':112},e,195)['value'])
 
     def test_two_clean_counters_with_explicit_bar_occlusion_need_temporal_confirmation(self):
         e={'top':{'available':False,'reason':'noncontiguous_or_occluded'},

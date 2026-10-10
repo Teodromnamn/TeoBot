@@ -12,6 +12,31 @@ def fits(current, maximum, evidence):
 def select_source(top, side, evidence, cached_maximum):
     tv = top.get('value')
     sc = side.get('current')
+    # A failing secondary fill is not a veto over a verified primary pair.
+    # Two matching counters + top fill identify an inconsistent sidebar fill;
+    # an explicitly covered sidebar counter also makes that local fill suspect.
+    # Preserve the measurement for diagnostics, without relabeling a disagreement
+    # as proven physical occlusion. Different readable counters remain ambiguous.
+    own_top = tv is not None and fits(tv['current'],tv['maximum'],{'top':evidence.get('top',{})})
+    sidebar_fill = evidence.get('sidebar',{})
+    sidebar_conflict = (tv is not None and sidebar_fill.get('available')
+        and not fits(tv['current'],tv['maximum'],{'sidebar':sidebar_fill}))
+    ignored_sidebar = None
+    if (own_top and sidebar_conflict and tv['maximum'] == cached_maximum
+            and ((sc == tv['current'] and not side.get('reason'))
+                 or (sc is None and side.get('reason') == 'foreign_color_overlay'))):
+        ignored_sidebar = dict(sidebar_fill)
+        evidence = dict(evidence,sidebar=dict(sidebar_fill,available=False,
+            reason='secondary_fill_untrusted',measured_interval=ignored_sidebar))
+
+    ignored_top = None
+    if (tv is not None and sc == tv['current'] and not side.get('reason')
+            and tv['maximum'] == cached_maximum
+            and fits(sc,cached_maximum,{'sidebar':evidence.get('sidebar',{})})
+            and evidence.get('top',{}).get('available') and not own_top):
+        ignored_top = dict(evidence['top'])
+        evidence = dict(evidence,top=dict(ignored_top,available=False,
+            reason='secondary_fill_untrusted',measured_interval=ignored_top))
     top_ok = tv is not None and fits(tv['current'],tv['maximum'],evidence)
     # A sidebar does not observe maximum. Expose only its current value;
     # the last confirmed maximum is used for a consistency check, not as truth.
@@ -29,6 +54,12 @@ def select_source(top, side, evidence, cached_maximum):
                   quality='unconfirmed',verification='unresolved',
                   fill_status='unavailable' if not any(e.get('available') for e in evidence.values()) else 'conflict',
                   source_checks={'top_color_consistent':top_ok,'side_color_consistent':side_ok})
+    if ignored_top is not None:
+        result['ignored_top_fill'] = ignored_top
+        result['source_checks']['top_fill_ignored'] = True
+    if ignored_sidebar is not None:
+        result['ignored_secondary_fill'] = ignored_sidebar
+        result['source_checks']['sidebar_fill_ignored'] = True
     # New maximum remains uncommitted, but matching current counters can still
     # be exact. Validate the observed ratio against color, retain cached maximum
     # only as history (it may be smaller than current after a genuine level-up).

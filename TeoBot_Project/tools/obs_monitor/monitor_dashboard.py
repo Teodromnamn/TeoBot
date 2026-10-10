@@ -65,6 +65,10 @@ def resource_text(resource, now_ms):
     if not sidebar.get('available') and sidebar.get('reason') in {
             'sidebar_contour_occluded', 'neutral_overlay', 'foreign_color_overlay'}:
         details += ' | boczny pasek zasloniety'
+    if sidebar.get('reason') == 'secondary_fill_untrusted':
+        details += ' | boczne wypelnienie niewiarygodne'
+    if ((resource.get('fill') or {}).get('top') or {}).get('reason') == 'secondary_fill_untrusted':
+        details += ' | gorne wypelnienie niewiarygodne'
     if age > 250:
         details += ' | wolny odczyt'
     return title, details, percent or 0
