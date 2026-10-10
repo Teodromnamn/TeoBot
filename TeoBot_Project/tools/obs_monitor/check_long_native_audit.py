@@ -15,21 +15,30 @@ import tempfile
 import zipfile
 
 
-def evaluate(rows):
+def evaluate(rows,reference=None):
     summary=rows[-1].get('summary',{}) if rows else {}
     errors=[]
-    required={'resource_samples':10562,'manually_labeled':10561,'labeled_selected':10561}
+    if reference is None:
+        frames=5281; ambiguous_keys=[('case_01340','hp')]
+    else:
+        frames=reference['frames']
+        ambiguous_keys=[(f'case_{i:05d}',r) for r in ('hp','mp')
+                        for start,end,current,maximum in reference[r] if current is None
+                        for i in range(start,end+1)]
+    labeled=2*frames-len(ambiguous_keys)
+    required={'resource_samples':2*frames,'manually_labeled':labeled,'labeled_selected':labeled}
     for key,expected in required.items():
         if summary.get(key)!=expected:errors.append({'counter':key,'expected':expected,'actual':summary.get(key)})
     for key in ['wrong_labeled_selected_current','wrong_labeled_confirmed_current','wrong_labeled_confirmed_maximum']:
         if summary.get(key)!=0:errors.append({'counter':key,'actual':summary.get(key)})
-    ambiguous=[r for r in rows if r.get('case')=='case_01340' and r.get('resource')=='hp']
-    if len(ambiguous)!=1 or (ambiguous[0].get('confirmed') or {}).get('value') is not None:
-        errors.append({'case':'case_01340','resource':'hp','reason':'ambiguous_frame_confirmed_or_missing'})
+    for case,resource in ambiguous_keys:
+        ambiguous=[r for r in rows if r.get('case')==case and r.get('resource')==resource]
+        if len(ambiguous)!=1 or (ambiguous[0].get('confirmed') or {}).get('value') is not None:
+            errors.append({'case':case,'resource':resource,'reason':'ambiguous_frame_confirmed_or_missing'})
     return {'passed':not errors,'errors':errors,'independently_labeled':summary.get('manually_labeled'),
             'correct_selected':summary.get('labeled_selected',0)-summary.get('wrong_labeled_selected_current',0),
             'confirmed_labeled':summary.get('labeled_confirmed'),
-            'ambiguous_resources':1,'note':'Entire native recording. One HP frame shows top 144 and side 130: no unique ground truth; confirmation must remain unavailable.'}
+            'ambiguous_resources':len(ambiguous_keys),'note':'Native recording with independent visual labels. Ambiguous frames, if any, must remain unconfirmed. Replay does not simulate OBS or window/minimization state.'}
 
 
 def write_labels(path,reference):
@@ -52,11 +61,12 @@ def write_labels(path,reference):
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('archive',type=Path)
     p.add_argument('--directory',default=r'C:\Program Files\Tesseract-OCR' if os.name=='nt' else '/usr/share/tesseract-ocr/5')
+    p.add_argument('--reference',type=Path,default=Path(__file__).with_name('long_native_labels.json'))
     p.add_argument('--output',type=Path,default=Path('long_native_audit'))
     args=p.parse_args();args.output.mkdir(parents=True,exist_ok=True)
     folder=Path(__file__).resolve().parent
-    reference=json.loads((folder/'long_native_labels.json').read_text(encoding='utf-8'))
-    print('Pelny audyt offline: 5281 klatek / 10562 wartosci. Gra i OBS nie sa potrzebne.',flush=True)
+    reference=json.loads(args.reference.read_text(encoding='utf-8'))
+    print(f"Pelny audyt offline: {reference['frames']} klatek / {2*reference['frames']} wartosci. Gra i OBS nie sa potrzebne.",flush=True)
     output=args.output/'replay_labeled.jsonl'
     with tempfile.TemporaryDirectory() as tmp:
         dataset=args.archive
@@ -81,7 +91,7 @@ def main():
             result=subprocess.run(command,stdout=f)
     if result.returncode:raise SystemExit(result.returncode)
     rows=[json.loads(line) for line in output.read_text(encoding='utf-8').splitlines()]
-    report=evaluate(rows)
+    report=evaluate(rows,reference)
     (args.output/'audit_checks.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
     print(json.dumps(report));print(f'Wyniki: {args.output.resolve()}',flush=True)
     return 0 if report['passed'] else 1

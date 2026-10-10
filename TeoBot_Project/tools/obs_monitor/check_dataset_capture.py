@@ -43,9 +43,21 @@ class Tests(unittest.TestCase):
             r=DatasetCapture(Path(folder)/'long',hz=20,limit=12100)
             self.assertEqual(r.limit,12100)
             self.assertEqual(r.interval,.05)
-            for hz,limit in [(21,100),(0,100),(20,20001)]:
+            for hz,limit in [(21,100),(-1,100),(20,20001)]:
                 with self.assertRaises(ValueError):
                     DatasetCapture(Path(folder)/'bad',hz=hz,limit=limit)
+
+    def test_every_frame_mode_preserves_bursts_and_limit(self):
+        now=[0.];frame=np.zeros((40,80,3),np.uint8)
+        boxes=[(0,0,30,10),(10,20,30,10)]
+        with tempfile.TemporaryDirectory() as folder:
+            r=DatasetCapture(Path(folder)/'all',hz=0,limit=2,clock=lambda:now[0])
+            self.assertTrue(r.capture(frame,{'frame_metadata':{'sequence':1}},boxes,boxes,boxes))
+            now[0]=.01
+            self.assertTrue(r.capture(frame,{'frame_metadata':{'sequence':2}},boxes,boxes,boxes))
+            self.assertFalse(r.capture(frame,{},boxes,boxes,boxes))
+            meta=json.loads((r.folder/'case_00001/reading.json').read_text())
+            self.assertEqual(meta['frame_metadata']['sequence'],2)
 
     def test_strict_requires_two_fresh_complete_agreements(self):
         gate = ConfirmationGate()

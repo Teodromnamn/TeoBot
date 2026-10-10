@@ -18,6 +18,8 @@ class Tests(unittest.TestCase):
             os.chdir(tmp)
             try:
                 def fake_main():
+                    args=monitor.sys.argv
+                    self.assertEqual(args[args.index('--dataset-hz')+1],'0')
                     print('ENTER: calibration prompt',end='',flush=True)
                     result=Path('obs_fast_results/run');result.mkdir(parents=True)
                     (result/'summary.json').write_text('{}')
