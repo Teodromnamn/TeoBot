@@ -159,7 +159,7 @@ def main():
     if args.capture_conflicts:
         from conflict_capture import ConflictCapture
         recorder=ConflictCapture(Path('ocr_conflicts_'+datetime.now().strftime('%Y%m%d_%H%M%S_%f')))
-        print('Diagnostyka konfliktow: maks. 60 przypadkow; zapis PNG doliczany do czasu analizy.', flush=True)
+        print('Diagnostyka konfliktow: maks. 60 przypadkow z pelnym ekranem; zapis PNG doliczany do czasu analizy.', flush=True)
     if args.capture_dataset:
         from dataset_capture import DatasetCapture
         dataset=DatasetCapture(Path('ocr_dataset_'+datetime.now().strftime('%Y%m%d_%H%M%S_%f')),hz=args.dataset_hz,limit=args.dataset_limit)
@@ -179,6 +179,7 @@ def main():
                     return result
                 def analyze(self, frame):
                     result=super().analyze(frame)
+                    result['frame_metadata']=getattr(self,'frame_metadata',None)
                     if recorder is not None:
                         begin=time.perf_counter()
                         recorder.capture(frame,result,self.top.rectangles,self.boxes,binary,self.side_bars)

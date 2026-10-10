@@ -54,7 +54,7 @@ def main():
     folder=root/('long_diagnostic_'+datetime.now().strftime('%Y%m%d_%H%M%S_%f'))
     folder.mkdir()
     command=['--seconds',str(args.seconds),'--threads','2','--target-fps','10',
-        '--resilient-verification','--capture-dataset','--dataset-hz','20',
+        '--resilient-verification','--capture-conflicts','--capture-dataset','--dataset-hz','20',
         '--dataset-limit',str(min(20000,args.seconds*20+100)),
         '--max-age-ms','5000','--slow-age-ms','250','--directory',args.directory,*extra]
     try:
@@ -64,7 +64,7 @@ def main():
           'arguments':command,'python':sys.version,'completed':False,
           'note':'Raw crops of every analyzed frame at target 10/s (capture cap 20/s). '
                  'No actions. Saved OCR is not ground truth. PNG writes affect timings. '
-                 'Includes calibration screenshots; inspect before publicly sharing.'}
+                 'Includes full conflict screenshots and calibration screenshots; inspect before publicly sharing.'}
     original_out,original_err,original_argv=sys.stdout,sys.stderr,sys.argv
     error=None
     with (folder/'console.log').open('w',encoding='utf-8') as log:

@@ -56,11 +56,44 @@ class Tests(unittest.TestCase):
             self.assertFalse(recorder.capture(frame,{'readings':readings},boxes,boxes,binary))
             path=recorder.finish()
             with zipfile.ZipFile(path) as archive:
-                self.assertEqual(len(archive.namelist()),22)
+                self.assertEqual(len(archive.namelist()),24)
                 meta=json.loads(archive.read('case_000/reading.json'))
                 self.assertEqual(meta['analysis']['readings'],readings)
                 crop=cv2.imdecode(np.frombuffer(archive.read('case_000/mp_side_original.png'),dtype=np.uint8),1)
                 np.testing.assert_array_equal(crop,frame[20:30,:30])
+
+    def test_disagreement_captured_even_when_selected_source_supported(self):
+        self.assertTrue(diagnostic_needed({'raw':['144/165 )'],
+            'side':{'current':130},'verification':'side_color_supported',
+            'value':{'current':130}}))
+        self.assertFalse(diagnostic_needed({'raw':['130/165 )'],
+            'side':{'current':130},'verification':'side_color_supported',
+            'value':{'current':130}}))
+        self.assertTrue(diagnostic_needed({'verification':'bounded_conflict'}))
+
+    def test_full_frame_and_identity_match_crops(self):
+        rng=np.random.default_rng(42)
+        frame=rng.integers(0,256,(50,80,3),dtype=np.uint8)
+        original=frame.copy()
+        boxes=[(0,0,30,10),(0,20,30,10)]
+        identity={'sequence':1340,'received_perf_s':123.45,'marker_age_ms':80}
+        analysis={'frame_metadata':identity,'readings':[
+            {'raw':['144/165 )'],'side':{'current':130},
+             'value':{'current':130},'verification':'side_color_supported'},
+            {'value':{'current':4},'side':{'current':4}}]}
+        with tempfile.TemporaryDirectory() as folder:
+            recorder=ConflictCapture(Path(folder)/'cases')
+            self.assertTrue(recorder.capture(frame,analysis,boxes,boxes,binary))
+            frame[:]=0  # A future capture cannot change saved evidence.
+            case=Path(folder)/'cases/case_000'
+            full=cv2.imread(str(case/'full_frame.png'))
+            np.testing.assert_array_equal(full,original)
+            for i,resource in enumerate(('hp','mp')):
+                x,y,w,h=boxes[i]
+                crop=cv2.imread(str(case/f'{resource}_top_original.png'))
+                np.testing.assert_array_equal(crop,full[y:y+h,x:x+w])
+            meta=json.loads((case/'reading.json').read_text())
+            self.assertEqual(meta['frame_metadata'],identity)
 
     def test_no_capture_when_sources_agree(self):
         recorder=ConflictCapture('must_not_be_created')

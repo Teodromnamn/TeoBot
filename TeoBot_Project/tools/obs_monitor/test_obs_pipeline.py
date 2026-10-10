@@ -488,6 +488,10 @@ def main():
                             monitor_control.finish_calibration(error)
                             events.append({'elapsed_s': time.perf_counter()-start, 'status': 'KALIBRACJA_BLAD', 'reason': str(error)})
                     continue
+                hp_analyzer.frame_metadata = {
+                    'sequence':seq, 'received_perf_s':received,
+                    'marker_age_ms':marker_age,
+                    'marker_status':marker_status}
                 analysis = hp_analyzer.analyze(frame)
                 readings = analysis['readings']
                 end = time.perf_counter()

@@ -1,5 +1,6 @@
-"""Bounded, opt-in diagnostics. Saves crops only, never the full game frame."""
+"""Bounded, opt-in diagnostics. Saves same-frame crops and a full screenshot for ambiguous readings."""
 import json
+import re
 import time
 import zipfile
 from pathlib import Path
@@ -9,8 +10,22 @@ from benchmark_hp_mp import crop_bar, prepare
 from dual_source import side_image
 
 
+def counters_disagree(reading):
+    # Diagnostic only: also catch a readable prefix rejected by the strict parser.
+    # Never use this extraction to select values or trigger actions.
+    raw = reading.get('raw') or []
+    if isinstance(raw,str): raw=[raw]
+    currents=[]
+    for text in raw:
+        match=re.match(r'^\s*\(?\s*(\d+)\s*/\s*\d+',text)
+        if match: currents.append(int(match.group(1)))
+    side=(reading.get('side') or {}).get('current')
+    return side is not None and any(current != side for current in currents)
+
+
 def diagnostic_needed(reading):
-    return (reading.get('verification') == 'conflict' or
+    return (counters_disagree(reading) or
+reading.get('verification') in ('conflict','bounded_conflict') or
             reading.get('fill_status') in ('conflict','unavailable') or
             (reading.get('side') or {}).get('reason') in ('digit_count_mismatch','foreign_color_overlay') or
             ('value' in reading and reading['value'] is None and
@@ -59,7 +74,13 @@ class ConflictCapture:
                     if not ok:
                         raise OSError('PNG encoding failed')
                     encoded.tofile(case/f'{resource}_{name}.png')
-            metadata = {'saved_at_unix_ms':time.time_ns()//1000000,
+            ok, encoded = cv2.imencode('.png', frame)
+            if not ok:
+                raise OSError('Full-frame PNG encoding failed')
+            encoded.tofile(case/'full_frame.png')
+            metadata = {'frame_metadata':analysis.get('frame_metadata'),
+                        'full_frame_file':'full_frame.png',
+                        'saved_at_unix_ms':time.time_ns()//1000000,
                         'elapsed_s':now-self.started, 'frame_shape':list(frame.shape),
                         'top_rectangles':top_boxes, 'side_rectangles':side_boxes,
                         'side_bar_rectangles':side_bar_boxes,

@@ -62,7 +62,7 @@ class DatasetCapture:
             if not ok:
                 raise OSError('Context PNG encoding failed')
             encoded.tofile(case/'sidebar_context.png')
-            meta = {'schema':1, 'elapsed_s':now-self.started,
+            meta = {'schema':2, 'frame_metadata':analysis.get('frame_metadata'), 'elapsed_s':now-self.started,
                     'sampled_at_unix_ms':time.time_ns()//1000000,
                     'frame_shape':list(frame.shape), 'top_rectangles':top_boxes,
                     'side_rectangles':side_boxes, 'side_bar_rectangles':side_bars,
