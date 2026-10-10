@@ -97,6 +97,33 @@ class Tests(unittest.TestCase):
 
 
 
+
+class NativeSidebarContourTests(unittest.TestCase):
+    """Real bar pixels: occlusion must not veto a readable top source."""
+    @classmethod
+    def setUpClass(cls):
+        import json, base64, cv2
+        from pathlib import Path
+        cls.fixture = json.loads(Path(__file__).with_name('sidebar_contour_cases.json').read_text())
+        cls.decode = staticmethod(lambda text: cv2.imdecode(np.frombuffer(base64.b64decode(text),np.uint8),1))
+        cls.models = {r:FillEvidence(cls.decode(im),r,True) for r,im in cls.fixture['calibration'].items()}
+
+    def test_real_item_borders_and_gray_popups_do_not_veto_top(self):
+        from source_selection import select_source
+        for case in self.fixture['covered']:
+            with self.subTest(case=case['case'],resource=case['resource']):
+                measured = self.models[case['resource']].measure(self.decode(case['image']))
+                self.assertFalse(measured['available'])
+                top = {'value':{'current':case['current'],'maximum':case['maximum']}}
+                result = select_source(top,case['side'],{'top':case['top_fill'],'sidebar':measured},case['maximum'])
+                self.assertEqual(result['value']['current'],case['current'])
+                self.assertTrue(result['source_checks']['top_color_consistent'])
+
+    def test_native_full_and_empty_tail_preserve_contour(self):
+        for case in self.fixture['clean']:
+            with self.subTest(resource=case['resource']):
+                self.assertTrue(self.models[case['resource']].measure(self.decode(case['image']))['available'])
+
 class ManaDirectionTests(unittest.TestCase):
     def test_top_mana_right_fill_and_sidebar_left_fill(self):
         full=np.full((14,100,3),(180,60,0),np.uint8)

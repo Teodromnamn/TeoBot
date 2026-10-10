@@ -18,6 +18,16 @@ def color_mask(image, resource, sidebar=False):
 class FillEvidence:
     def __init__(self, full_image, resource, sidebar=False):
         self.shape = full_image.shape
+        self.sidebar_rim_rows = np.array([], dtype=int)
+        if sidebar:
+            hsv = cv2.cvtColor(full_image, cv2.COLOR_BGR2HSV)
+            # Learn the saturated upper bevel, not the changing fill body.
+            # Flat synthetic bars have no bevel and must not invent one.
+            core = hsv[:, 4:-4] if hsv.shape[1] > 12 else hsv
+            profile = np.median(core[:, :, 2], axis=1)
+            if np.ptp(profile) >= 20:
+                self.sidebar_rim_rows = np.array([y for y in range(min(2, len(profile)))
+                    if np.mean((core[y, :, 1] > 90) & (core[y, :, 2] > 60)) >= .90], dtype=int)
         self.resource = resource
         self.sidebar = sidebar
         mask = color_mask(full_image, resource, sidebar)
@@ -59,6 +69,28 @@ class FillEvidence:
                 return {'available':False,'reason':'neutral_overlay'}
         if self.sidebar:
             hue,saturation,value=cv2.split(cv2.cvtColor(image,cv2.COLOR_BGR2HSV))
+            if len(self.sidebar_rim_rows):
+                # Both the full rim and the native empty tail retain saturated
+                # red/blue pixels. A neutral popup or an item border breaks this
+                # calibrated contour even if the body resembles an empty tail.
+                rim = self.sidebar_rim_rows
+                native_hue = (hue >= 95) & (hue <= 135)
+                if self.resource == 'hp':
+                    native_hue |= (hue <= 12) | (hue >= 165)
+                intact = native_hue & (saturation >= 45) & (value >= 40)
+                broken = np.any(~intact[rim, 4:-4], axis=0)
+                # A lower item edge can miss the upper rim entirely. Native
+                # full/empty central body is shaded, never a near-black stripe.
+                broken |= np.any(value[self.rows, 4:-4] < 40, axis=0)
+                # Ignore isolated compression pixels; three adjoining columns
+                # are enough to identify a border cutting across the bevel.
+                if len(broken) >= 3 and np.any(np.convolve(broken.astype(int), np.ones(3,dtype=int), 'valid') == 3):
+                    return {'available':False,'reason':'sidebar_contour_occluded'}
+            neutral = ((saturation < 45) & (value > 140)).astype(np.uint8)
+            _,_,objects,_ = cv2.connectedComponentsWithStats(neutral,8)
+            for x,y,w,h,area in objects[1:]:
+                if w >= 4 and h >= max(3,image.shape[0]//2) and area >= image.shape[0]*2:
+                    return {'available':False,'reason':'neutral_overlay'}
             # Sidebar fill is always red/blue. Green/yellow item pixels are
             # foreign content, including when they hide the true fill edge.
             foreign=(hue >= 15) & (hue <= 85) & (saturation > 90) & (value > 80)

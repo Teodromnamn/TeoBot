@@ -70,6 +70,13 @@ class DashboardTests(unittest.TestCase):
         finally:
             pipeline.monitor_control, pipeline._result_publisher = old_control, old_publisher
 
+    def test_top_remains_visible_when_sidebar_contour_is_covered(self):
+        title, detail, _ = resource_text({'valid':True,'value':{'current':215},
+            'effective_maximum':215,'effective_percent':100,'source':'top_text',
+            'fill':{'sidebar':{'available':False,'reason':'sidebar_contour_occluded'}}},1000)
+        self.assertIn('215 / 215',title)
+        self.assertIn('boczny pasek zasloniety',detail)
+
     def test_cached_side_value_slow_warning_and_occlusion(self):
         text, detail, percent = resource_text({'valid':True,'value':{'current':111},
             'effective_maximum':210,'effective_percent':111/210*100,

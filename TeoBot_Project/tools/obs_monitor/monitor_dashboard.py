@@ -61,6 +61,10 @@ def resource_text(resource, now_ms):
         details += ' | maksimum zapamietane'
     if (resource.get('text_occlusion') or {}).get('occluded'):
         details += ' | gorne cyfry zasloniete'
+    sidebar = (resource.get('fill') or {}).get('sidebar') or {}
+    if not sidebar.get('available') and sidebar.get('reason') in {
+            'sidebar_contour_occluded', 'neutral_overlay', 'foreign_color_overlay'}:
+        details += ' | boczny pasek zasloniety'
     if age > 250:
         details += ' | wolny odczyt'
     return title, details, percent or 0
