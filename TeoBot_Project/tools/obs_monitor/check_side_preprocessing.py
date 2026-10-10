@@ -8,6 +8,27 @@ from test_obs_tesseract import Engine
 
 
 class Tests(unittest.TestCase):
+    def test_native_colored_margin_does_not_hide_readable_105(self):
+        import json,base64,cv2
+        from pathlib import Path
+        from source_selection import select_source
+        f=json.loads(Path(__file__).with_name('sidebar_contour_cases.json').read_text())['readable_side_margin']
+        crop=cv2.imdecode(np.frombuffer(base64.b64decode(f['image']),np.uint8),1)
+        engine=Mock();engine.recognize.return_value=SimpleNamespace(txts=['105'])
+        side=recognize_side(engine,crop,True,text_left=f['text_left'])
+        self.assertEqual(side['current'],105)
+        self.assertTrue(side['ignored_left_margin_overlay'])
+        result=select_source({'value':{'current':108,'maximum':215}},side,
+            {'top':{'available':True,'lower_percent':46.84,'upper_percent':49.34},
+             'sidebar':{'available':True,'lower_percent':44.02,'upper_percent':51.63}},215)
+        self.assertEqual(result['value']['current'],105)
+        self.assertEqual(result['source'],'side_text')
+        crop[:,8:11]=(180,0,180)
+        engine.reset_mock()
+        blocked=recognize_side(engine,crop,True,text_left=8)
+        self.assertIsNone(blocked['current'])
+        engine.recognize.assert_not_called()
+
     def test_shortened_number_cannot_be_a_fallback(self):
         crop = np.zeros((15, 54, 3), dtype=np.uint8)
         for x in (4, 14, 24):

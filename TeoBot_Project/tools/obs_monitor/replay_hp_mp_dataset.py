@@ -11,7 +11,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 from benchmark_hp_mp import prepare
-from dual_source import recognize_side, ConfirmationGate
+from dual_source import recognize_side, ConfirmationGate, side_text_left
 from test_obs_tesseract import Engine, binary, recognize_top
 from source_selection import select_source,needs_glyph_check,corroborate_top
 from test_obs_pipeline import ConfirmMaximum
@@ -77,6 +77,13 @@ def main():
                     if value is None or value['current'] != value['maximum']:
                         raise ValueError('Resilient replay requires a verified full calibration frame')
                     maximum_guards[resource] = ConfirmMaximum(value['maximum'])
+            sidebar_left = {}
+            if args.resilient_verification and not args.saved_ocr:
+                for resource in ('hp','mp'):
+                    ref_path = f'{reference}/{resource}_side_original.png'
+                    if ref_path not in archive.namelist():
+                        ref_path = f'{cases[0]}/{resource}_side_original.png'
+                    sidebar_left[resource] = side_text_left(cv2.imdecode(np.frombuffer(archive.read(ref_path),np.uint8),1))
             for case in cases:
                 metadata = json.loads(archive.read(f'{case}/reading.json'))
                 observed_at = float(metadata['elapsed_s'])
@@ -95,7 +102,7 @@ def main():
                     else:
                         raw_top=image('top_original')
                         top = recognize_top(engine,binary(prepare(raw_top,'dynamic')),args.resilient_verification,raw_crop=raw_top,resource=resource)
-                        side = recognize_side(engine,image('side_original'),args.resilient_verification)
+                        side = recognize_side(engine,image('side_original'),args.resilient_verification,text_left=sidebar_left.get(resource))
                     value = top['value']
                     agreement = value is not None and side['current'] == value['current']
                     checked = None

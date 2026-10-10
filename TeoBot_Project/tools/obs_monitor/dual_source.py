@@ -25,7 +25,13 @@ def side_image(crop):
     return cv2.copyMakeBorder(binary, 16, 16, 16, 16, cv2.BORDER_CONSTANT, value=255)
 
 
-def recognize_side(engine, crop, glyph_retry=False):
+def side_text_left(crop):
+    neutral = (crop.min(axis=2) > 140) & (crop.max(axis=2).astype(int)-crop.min(axis=2).astype(int) <= 45)
+    columns = np.flatnonzero(neutral.any(axis=0))
+    return int(columns[0]) if len(columns) else None
+
+
+def recognize_side(engine, crop, glyph_retry=False, text_left=None):
     """Require one OCR digit per separated ink group; never infer omitted digits."""
     if glyph_retry and crop.size:
         # Counter glyphs/background are neutral gray. Colored item icons are
@@ -34,6 +40,15 @@ def recognize_side(engine, crop, glyph_retry=False):
         high = crop.max(axis=2).astype(np.int16)
         colored = int(np.count_nonzero((high-low > 45) & (high > 80)))
         if colored >= max(4,crop.shape[0]*crop.shape[1]*.01):
+            foreign = (high-low > 45) & (high > 80)
+            # Trim only the calibrated blank left margin. Never infer the
+            # start of a number from its remaining, possibly covered digits.
+            if (text_left is not None and 0 < text_left < crop.shape[1]
+                    and not foreign[:,text_left:].any()
+                    and not (low[:,:text_left] > 140).any()):
+                result = recognize_side(engine,crop[:,text_left:],glyph_retry=True)
+                result['ignored_left_margin_overlay'] = True
+                return result
             return {'raw':'','current':None,'visible_digit_groups':0,
                     'foreign_color_pixels':colored,'reason':'foreign_color_overlay','ocr_skipped':True}
     image = side_image(crop)
@@ -163,6 +178,7 @@ class DualAnalyzer:
         self.engine = top_analyzer.engine
         self.clock = clock
         self.boxes = None
+        self.text_left = [None,None]
         self.next_check = 0.
         self.fast_until = 0.
         self.conflict_pending = False
@@ -172,11 +188,12 @@ class DualAnalyzer:
 
     def read_side(self, frame, index):
         x,y,w,h = self.boxes[index]
-        return recognize_side(self.engine, frame[y:y+h, x:x+w], glyph_retry=self.resilient)
+        return recognize_side(self.engine, frame[y:y+h, x:x+w], glyph_retry=self.resilient, text_left=self.text_left[index])
 
     def calibrate(self, frame, readings, guards):
         self.boxes, bars = locate(frame, return_bars=True)
         self.side_bars = bars
+        self.text_left = [side_text_left(frame[y:y+h,x:x+w]) for x,y,w,h in self.boxes]
         self.shape = frame.shape
         self.guards = guards
         red, blue = bars
