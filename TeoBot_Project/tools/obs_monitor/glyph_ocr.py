@@ -93,3 +93,17 @@ def join(parts):
     height=max(p.shape[0] for p in parts)
     return np.concatenate([cv2.copyMakeBorder(p,height-p.shape[0],0,0,4,
                           cv2.BORDER_CONSTANT,value=255) for p in parts],axis=1)
+
+
+def ratio_current_groups(image):
+    """Count separated visible current glyphs before a geometric slash.
+
+    A structural check only; it does not supply or infer the numeric value.
+    """
+    clean=image.copy()
+    rows=np.flatnonzero(np.any(clean<128,axis=1))
+    if len(rows) and np.count_nonzero(clean[rows[-1]]<128)>image.shape[1]*.65:
+        clean[max(0,rows[-1]-1):rows[-1]+1]=255
+    parts=[p for p in groups(clean) if p.shape[0]>=6]
+    slashes=[i for i,p in enumerate(parts) if is_slash(p)]
+    return slashes[0] if slashes and slashes[0]>0 else None

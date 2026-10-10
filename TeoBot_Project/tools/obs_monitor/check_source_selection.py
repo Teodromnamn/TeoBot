@@ -30,9 +30,13 @@ class Tests(unittest.TestCase):
         self.assertIsNone(r['value']['maximum'])
 
     def test_color_cannot_resolve_close_disagreement(self):
-        r=select_source(top(111),{'current':112},evidence(),195)
+        e=evidence(55,59)
+        e['sidebar']=dict(e['top'])  # Both local pairs must be credible.
+        r=select_source(top(111),{'current':112},e,195)
         self.assertIsNone(r['value'])
-        self.assertEqual(r['verification'],'conflict')
+        self.assertEqual(r['verification'],'bounded_conflict')
+        self.assertEqual(r['candidate_range']['lower'],111)
+        self.assertEqual(r['candidate_range']['upper'],112)
 
     def test_matching_counters_and_top_fill_outvote_secondary_fill(self):
         e=evidence();e['sidebar']={'available':True,'lower_percent':0,'upper_percent':2}

@@ -94,6 +94,16 @@ def recognize_top(engine, image, glyph_retry=False, raw_crop=None, resource=None
         if evidence['occluded']:return unavailable(evidence)
     result = parse_reading(engine.recognize(image))
     if evidence is not None:result['text_occlusion']=evidence
+    mismatch=False
+    if glyph_retry and result['value'] is not None:
+        from glyph_ocr import ratio_current_groups
+        visible=ratio_current_groups(image)
+        mismatch=visible is not None and visible!=len(str(result['value']['current']))
+        if mismatch:
+            result['visible_current_digit_groups']=visible
+            result['rejected_ocr_value']=result['value']
+            result['value']=None
+            result['reason']='current_digit_count_mismatch'
     if glyph_retry and result['value'] is None:
         recovery = recover_ratio(engine, image)
         result['glyph_recovery'] = recovery
@@ -101,6 +111,7 @@ def recognize_top(engine, image, glyph_retry=False, raw_crop=None, resource=None
             recovered = parse_reading(SimpleNamespace(txts=[recovery['text']], scores=[0.]))
             if recovered['value'] is not None:
                 result.update(value=recovered['value'], method='visual_separator_and_glyphs')
+                result.pop('reason',None)
     return result
 
 

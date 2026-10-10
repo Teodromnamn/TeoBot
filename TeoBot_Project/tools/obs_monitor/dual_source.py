@@ -38,9 +38,9 @@ def recognize_side(engine, crop, glyph_retry=False, text_left=None):
         # foreign content even when their bright edges resemble valid digits.
         low = crop.min(axis=2).astype(np.int16)
         high = crop.max(axis=2).astype(np.int16)
-        colored = int(np.count_nonzero((high-low > 45) & (high > 80)))
+        colored = int(np.count_nonzero((high-low > 20) & (high > 30)))
         if colored >= max(4,crop.shape[0]*crop.shape[1]*.01):
-            foreign = (high-low > 45) & (high > 80)
+            foreign = (high-low > 20) & (high > 30)
             # Trim only the calibrated blank left margin. Never infer the
             # start of a number from its remaining, possibly covered digits.
             if (text_left is not None and 0 < text_left < crop.shape[1]

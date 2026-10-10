@@ -39,6 +39,22 @@ class Tests(unittest.TestCase):
         self.assertEqual(r['reason'],'foreign_color_overlay')
         e.recognize.assert_not_called()
 
+    def test_dark_colored_item_outline_rejected_before_ocr(self):
+        crop=np.full((15,54,3),50,np.uint8)
+        for y in range(2,12):crop[y,10+y:12+y]=[8,22,45]
+        engine=Mock()
+        result=recognize_side(engine,crop,glyph_retry=True)
+        self.assertEqual(result['reason'],'foreign_color_overlay')
+        engine.recognize.assert_not_called()
+
+    def test_top_shortened_plausible_ratio_is_recovered(self):
+        from test_obs_tesseract import recognize_top
+        engine=Mock();engine.recognize.return_value=SimpleNamespace(txts=['1/215'],scores=[.8])
+        with patch('glyph_ocr.ratio_current_groups',return_value=3),patch('test_obs_tesseract.recover_ratio',return_value={'text':'111/215','reason':None}):
+            result=recognize_top(engine,self.image(),glyph_retry=True)
+        self.assertEqual(result['value']['current'],111)
+        self.assertEqual(result['rejected_ocr_value']['current'],1)
+
     def test_disagreement_or_multiple_characters_rejected(self):
         e=Mock();e.recognize.side_effect=[SimpleNamespace(txts=['1']),SimpleNamespace(txts=['7'])]
         self.assertIsNone(read_digits(e,self.image())['text'])
