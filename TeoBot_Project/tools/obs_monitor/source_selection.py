@@ -64,7 +64,9 @@ def select_source(top, side, evidence, cached_maximum):
     # A readable primary ratio verifies CURRENT even if its maximum changed.
     # Do not commit the new maximum; keep the prior confirmed maximum as history.
     # Secondary failure must not suppress this independently verified current.
-    if (maximum_change_unverified and own_top
+    # A counter outside an unverified NEW maximum is not necessarily invalid:
+    # prefer it if it fits the cached maximum and the available fills (110 vs 11/11).
+    if (maximum_change_unverified and own_top and not side_ok
             and (sc is None or side.get('reason') or not 0 <= sc <= tv['maximum'])):
         result.update(value={'current':tv['current'],'maximum':None,'percent':None,
                              'last_confirmed_maximum':cached_maximum,

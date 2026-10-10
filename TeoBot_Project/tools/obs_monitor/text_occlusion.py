@@ -29,6 +29,22 @@ def inspect_top_text(crop, resource=None):
                       np.maximum(1.,np.sum(direction*direction,axis=2)),0.,1.)
         fitted=background+alpha[:,:,None]*direction
         distance=np.minimum(distance,np.max(np.abs(pixels-fitted),axis=2))
+    # A tooltip can clip only the bottom of every digit. Nearby reference
+    # strips may themselves be inside the tooltip, so use the distant bar ends.
+    edge_distance=np.full(roi.shape[:2],255.,np.float32)
+    for strip in (crop[:,:24],crop[:,-24:]):
+        background=np.median(strip.astype(np.float32),axis=1)[:,None,:]
+        direction=255.-background
+        alpha=np.clip(np.sum((pixels-background)*direction,axis=2)/
+                      np.maximum(1.,np.sum(direction*direction,axis=2)),0.,1.)
+        fitted=background+alpha[:,:,None]*direction
+        edge_distance=np.minimum(edge_distance,np.max(np.abs(pixels-fitted),axis=2))
+    neutral_edge=((sat<45)&(val>30)&(edge_distance>35)).astype(np.uint8)
+    _,_,edge_objects,_=cv2.connectedComponentsWithStats(neutral_edge,8)
+    for x,y,w,h,area in edge_objects[1:]:
+        if w>=12 and h>=2 and area>=w*h*.6 and (y<=2 or y+h>=height-2):
+            return {'occluded':True,'status':'ZASLONIETY','reason':'neutral_popup_clips_text_edge',
+                    'rectangle':[left+int(x),int(y),int(w),int(h)]}
     foreign=((sat>70)&(val>70)&(distance>40)).astype(np.uint8)
     # Ignore the bevel, but retain small objects clipping the text from an edge.
     foreign[:2]=0;foreign[-2:]=0

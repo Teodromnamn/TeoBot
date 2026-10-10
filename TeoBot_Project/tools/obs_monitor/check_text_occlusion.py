@@ -18,6 +18,18 @@ class Tests(unittest.TestCase):
         self.assertTrue(inspect_top_text(crop)['occluded'])
         crop[:]=[0,180,0];crop[:,40:60]=190
         self.assertFalse(inspect_top_text(crop)['occluded'])
+    def test_bottom_popup_clips_lower_digits(self):
+        crop=np.full((14,770,3),(160,75,10),np.uint8)
+        crop[10:14,280:560]=50
+        result=inspect_top_text(crop,'mp')
+        self.assertTrue(result['occluded'])
+        self.assertEqual(result['reason'],'neutral_popup_clips_text_edge')
+
+    def test_normal_bevel_at_bottom_is_not_popup(self):
+        crop=np.full((14,770,3),(160,75,10),np.uint8)
+        crop[12:14]=90
+        self.assertFalse(inspect_top_text(crop,'mp')['occluded'])
+
     def test_normal_short_white_glyphs_are_not_overlay(self):
         crop=np.full((14,770,3),(0,180,0),np.uint8)
         for x in range(360,408,8):crop[3:11,x:x+2]=255
