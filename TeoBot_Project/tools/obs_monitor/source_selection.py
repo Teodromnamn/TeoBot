@@ -24,7 +24,8 @@ def select_source(top, side, evidence, cached_maximum):
     ignored_sidebar = None
     if (own_top and sidebar_conflict and tv['maximum'] == cached_maximum
             and ((sc == tv['current'] and not side.get('reason'))
-                 or (sc is None and side.get('reason') == 'foreign_color_overlay'))):
+                 or sc is None or side.get('reason')
+                 or not 0 <= sc <= tv['maximum'])):
         ignored_sidebar = dict(sidebar_fill)
         evidence = dict(evidence,sidebar=dict(sidebar_fill,available=False,
             reason='secondary_fill_untrusted',measured_interval=ignored_sidebar))
@@ -60,6 +61,19 @@ def select_source(top, side, evidence, cached_maximum):
     if ignored_sidebar is not None:
         result['ignored_secondary_fill'] = ignored_sidebar
         result['source_checks']['sidebar_fill_ignored'] = True
+    # A readable primary ratio verifies CURRENT even if its maximum changed.
+    # Do not commit the new maximum; keep the prior confirmed maximum as history.
+    # Secondary failure must not suppress this independently verified current.
+    if (maximum_change_unverified and own_top
+            and (sc is None or side.get('reason') or not 0 <= sc <= tv['maximum'])):
+        result.update(value={'current':tv['current'],'maximum':None,'percent':None,
+                             'last_confirmed_maximum':cached_maximum,
+                             'estimated_percent':100*tv['current']/cached_maximum,
+                             'maximum_source':'cached_top_text'},
+                      source='top_text',quality='current_only',
+                      verification='top_color_supported',fill_status='consistent',
+                      maximum_update_blocked='changed_maximum_not_verified_at_full_resource')
+        return result
     # New maximum remains uncommitted, but matching current counters can still
     # be exact. Validate the observed ratio against color, retain cached maximum
     # only as history (it may be smaller than current after a genuine level-up).
