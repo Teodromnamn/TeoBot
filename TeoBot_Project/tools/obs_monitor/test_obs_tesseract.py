@@ -131,6 +131,8 @@ def main():
     parser.add_argument('--verify-side', action='store_true', help='Porownuj boczne liczniki 2/s na tej samej klatce')
     parser.add_argument('--capture-conflicts', action='store_true', help='Zapisz ograniczona paczke wycinkow przy konflikcie (wymaga --verify-side)')
     parser.add_argument('--capture-dataset', action='store_true', help='Zapisuj surowe wycinki obu zrodel i paskow do ZIP, 5/s, maks. 2000 probek')
+    parser.add_argument('--dataset-hz',type=float,default=5,help='Czestotliwosc zapisu wycinkow, maks. 20/s')
+    parser.add_argument('--dataset-limit',type=int,default=2000,help='Limit zapisanych klatek, maks. 20000')
     parser.add_argument('--strict-verification', action='store_true', help='Wymagaj zgodnosci obu OCR w kazdej klatce i dwoch kolejnych zgodnych par')
     parser.add_argument('--resilient-verification', action='store_true', help='Eksperymentalnie: OCR cyfr osobno, wybor zrodla wsparty kolorem i dwiema klatkami')
     parser.add_argument('--threads',type=int,choices=[1,2,4],default=2)
@@ -160,8 +162,8 @@ def main():
         print('Diagnostyka konfliktow: maks. 60 przypadkow; zapis PNG doliczany do czasu analizy.', flush=True)
     if args.capture_dataset:
         from dataset_capture import DatasetCapture
-        dataset=DatasetCapture(Path('ocr_dataset_'+datetime.now().strftime('%Y%m%d_%H%M%S_%f')))
-        print('Dataset: surowe PNG 5/s; zapis doliczany do czasu analizy. OCR nie jest etykieta.', flush=True)
+        dataset=DatasetCapture(Path('ocr_dataset_'+datetime.now().strftime('%Y%m%d_%H%M%S_%f')),hz=args.dataset_hz,limit=args.dataset_limit)
+        print(f'Dataset: surowe PNG do {args.dataset_hz}/s, limit {args.dataset_limit}; zapis doliczany do czasu analizy. OCR nie jest etykieta.', flush=True)
     original_factory,original_analyzer,original_parser=pipeline.make_engine,pipeline.HpMpAnalyzer,pipeline.parse_output
     original_argv=sys.argv
     try:

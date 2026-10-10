@@ -11,8 +11,8 @@ from benchmark_hp_mp import crop_bar
 
 class DatasetCapture:
     def __init__(self, folder, hz=5, limit=2000, clock=time.perf_counter):
-        if not 0 < hz <= 10 or not 0 < limit <= 2000:
-            raise ValueError('Dataset requires 0 < hz <= 10 and 0 < limit <= 2000')
+        if not 0 < hz <= 20 or not 0 < limit <= 20000:
+            raise ValueError('Dataset requires 0 < hz <= 20 and 0 < limit <= 20000')
         self.folder = Path(folder)
         self.interval = 1/hz
         self.limit = limit

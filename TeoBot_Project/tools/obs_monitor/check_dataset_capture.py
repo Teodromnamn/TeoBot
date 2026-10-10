@@ -38,6 +38,15 @@ class Tests(unittest.TestCase):
                 meta = json.loads(archive.read('case_00001/reading.json'))
                 self.assertAlmostEqual(meta['elapsed_s'],.3)
 
+    def test_long_run_bounds(self):
+        with tempfile.TemporaryDirectory() as folder:
+            r=DatasetCapture(Path(folder)/'long',hz=20,limit=12100)
+            self.assertEqual(r.limit,12100)
+            self.assertEqual(r.interval,.05)
+            for hz,limit in [(21,100),(0,100),(20,20001)]:
+                with self.assertRaises(ValueError):
+                    DatasetCapture(Path(folder)/'bad',hz=hz,limit=limit)
+
     def test_strict_requires_two_fresh_complete_agreements(self):
         gate = ConfirmationGate()
         reading = {'value':{'current':111,'maximum':185}, 'verification':'current_agrees'}
