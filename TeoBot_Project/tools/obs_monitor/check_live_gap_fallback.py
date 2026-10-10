@@ -71,6 +71,8 @@ def check_native_cases(archive_path):
                 side=recognize_side(engine,image(prefix+'side_original.png'),True,text_left=left)
                 evidence={name:FillEvidence(image(f'calibration/{r}_{kind}.png'),r,sidebar=name=='sidebar').measure(image(prefix+kind+'.png'))
                           for name,kind in [('top','top_original'),('sidebar','side_bar')]}
+                if i==579 and (side.get('current')!=65 or not side.get('ignored_neutral_margin_overlay')):
+                    errors.append({'case':i,'resource':r,'reason':'native_neutral_rim_not_detected','side':side})
                 selected=select_source(top,side,evidence,cached)
                 actual=(selected.get('value') or {}).get('current')
                 if actual!=expected:errors.append({'case':i,'resource':r,'expected':expected,'actual':actual})

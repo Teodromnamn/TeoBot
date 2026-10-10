@@ -51,6 +51,21 @@ def recognize_side(engine, crop, glyph_retry=False, text_left=None):
                 return result
             return {'raw':'','current':None,'visible_digit_groups':0,
                     'foreign_color_pixels':colored,'reason':'foreign_color_overlay','ocr_skipped':True}
+    if glyph_retry and crop.size and text_left is not None and text_left > 2:
+        # Calibration fixes the left edge of text. Neutral item rims can look
+        # like an extra digit and evade the colored-overlay detector.
+        bright=(crop.min(axis=2)>140).astype(np.uint8)
+        if np.count_nonzero(bright[:,:text_left-2]) >= 3:
+            count,labels,stats,_=cv2.connectedComponentsWithStats(bright,8)
+            margin_labels=set(np.unique(labels[:,:text_left-2]))-{0}
+            overlaps=any(stats[label,cv2.CC_STAT_LEFT]+stats[label,cv2.CC_STAT_WIDTH]>text_left
+                         for label in margin_labels)
+            if overlaps:
+                return {'raw':'','current':None,'visible_digit_groups':0,
+                        'reason':'neutral_margin_overlay_overlaps_text','ocr_skipped':True}
+            result=recognize_side(engine,crop[:,text_left:],glyph_retry=True)
+            result['ignored_neutral_margin_overlay']=True
+            return result
     image = side_image(crop)
     if glyph_retry:
         ink=(image<128).astype(np.uint8)

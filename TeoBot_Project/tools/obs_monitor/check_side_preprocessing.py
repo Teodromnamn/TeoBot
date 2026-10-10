@@ -29,6 +29,26 @@ class Tests(unittest.TestCase):
         self.assertIsNone(blocked['current'])
         engine.recognize.assert_not_called()
 
+    def test_neutral_margin_rim_is_trimmed(self):
+        crop=np.zeros((15,54,3),dtype=np.uint8)
+        crop[3:12,0:3]=230
+        crop[3:12,7:10]=255
+        crop[3:12,15:18]=255
+        engine=Mock();engine.recognize.return_value=SimpleNamespace(txts=['65'])
+        result=recognize_side(engine,crop,True,text_left=7)
+        self.assertEqual(result['current'],65)
+        self.assertTrue(result['ignored_neutral_margin_overlay'])
+        self.assertEqual(result['visible_digit_groups'],2)
+
+    def test_neutral_margin_rim_overlapping_text_is_rejected(self):
+        crop=np.zeros((15,54,3),dtype=np.uint8)
+        crop[3:12,0:10]=230
+        engine=Mock()
+        result=recognize_side(engine,crop,True,text_left=7)
+        self.assertIsNone(result['current'])
+        self.assertEqual(result['reason'],'neutral_margin_overlay_overlaps_text')
+        engine.recognize.assert_not_called()
+
     def test_shortened_number_cannot_be_a_fallback(self):
         crop = np.zeros((15, 54, 3), dtype=np.uint8)
         for x in (4, 14, 24):
