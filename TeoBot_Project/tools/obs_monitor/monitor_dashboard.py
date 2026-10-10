@@ -46,6 +46,12 @@ def recalibrate(frame, engine, detector, reader, analyzer_factory, guard_factory
 
 def resource_text(resource, now_ms):
     value = resource.get('value') if resource.get('valid') else None
+    if not value and resource.get('range_valid') and resource.get('value_range'):
+        interval=resource['value_range']
+        age=max(0,now_ms-resource.get('observed_at_unix_ms',now_ms))
+        title=f"{interval['lower']}–{interval['upper']} / {interval['maximum']}"
+        detail=f"Odczyt niepewny; prog oceniany dla calego zakresu | wiek: {age:.0f} ms"
+        return title,detail,interval['lower_percent']
     if not value:
         return 'Brak potwierdzonego odczytu', resource.get('reason', 'Oczekiwanie'), 0
     maximum = resource.get('effective_maximum')

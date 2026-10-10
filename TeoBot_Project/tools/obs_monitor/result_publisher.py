@@ -26,7 +26,7 @@ class ResultPublisher:
         for name in ('hp','mp'):
             resource=data.get('resources',{}).get(name,{})
             if resource.get('expires_at_unix_ms',0)<=now:
-                resource.update(valid=False,value=None,quality='stale')
+                resource.update(valid=False,value=None,quality='stale',range_valid=False,value_range=None)
                 data[name]=None
         data['valid']=all(data.get('resources',{}).get(r,{}).get('valid',False) for r in ('hp','mp'))
         return data

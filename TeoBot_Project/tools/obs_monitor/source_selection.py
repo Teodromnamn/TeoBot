@@ -88,9 +88,19 @@ def select_source(top, side, evidence, cached_maximum):
         result.update(value=tv,source='top_text',quality='exact',
                       verification='top_glyphs_supported_without_color',fill_status='unavailable')
         return result
-    if top_ok and side_ok and tv['current'] != sc:
-        result['verification']='conflict'
-        return result
+    # Bound only a residual ambiguity: each candidate must fit EVERY remaining
+    # trustworthy fill. A discriminated OCR error must not enter the range.
+    if (top_ok and side_ok and sc != tv['current']
+            and not side.get('reason') and tv['maximum'] == cached_maximum
+            and fits(tv['current'],tv['maximum'],{'top':evidence.get('top',{})})
+            and fits(sc,cached_maximum,{'sidebar':evidence.get('sidebar',{})})):
+        lower,upper=sorted((tv['current'],sc))
+        return dict(top,side=side,fill=evidence,value=None,source='top_and_side_text',
+            quality='bounded_conflict',verification='bounded_conflict',fill_status='consistent',
+            candidate_range={'lower':lower,'upper':upper,'maximum':cached_maximum,
+                'maximum_is_cached':True,'lower_percent':100*lower/cached_maximum,
+                'upper_percent':100*upper/cached_maximum},
+            range_candidates={'top':tv['current'],'sidebar':sc})
     if top_ok:
         result.update(value=tv,source='top_and_side_text' if side_ok else 'top_text',
                       quality='exact',verification='current_agrees' if side_ok else 'top_color_supported',

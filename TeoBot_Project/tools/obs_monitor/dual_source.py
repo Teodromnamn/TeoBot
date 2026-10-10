@@ -122,6 +122,21 @@ class ConfirmationGate:
     def apply(self, reading, now):
         result = dict(reading)
         value = reading.get('value')
+        interval = reading.get('candidate_range')
+        if self.allow_color_supported and reading.get('verification') == 'bounded_conflict' and interval:
+            previous=self.previous
+            self.previous=(('range',interval['maximum'],interval['lower'],interval['upper']),now)
+            self.previous_verified_pair=False
+            result.update(value=None,confirmed_range=None,confirmation='waiting_range_confirmation')
+            if (previous and previous[0][0]=='range' and previous[0][1]==interval['maximum']
+                    and 0 < now-previous[1] <= self.max_gap):
+                lower=min(interval['lower'],previous[0][2]);upper=max(interval['upper'],previous[0][3])
+                result['confirmed_range']=dict(interval,lower=lower,upper=upper,
+                    lower_percent=100*lower/interval['maximum'],upper_percent=100*upper/interval['maximum'])
+                result['confirmation']='two_frames_bound_action'
+            return result
+        if self.previous and self.previous[0][0]=='range':
+            self.previous=None
         supported = reading.get('verification') == 'current_agrees'
         if self.allow_color_supported:
             supported = (reading.get('verification') in ('current_agrees','top_color_supported','side_color_supported')

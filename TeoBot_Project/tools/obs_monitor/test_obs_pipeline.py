@@ -151,9 +151,11 @@ def publish(path, status, readings=None, age_ms=None, max_age_ms=5000, bar_statu
         value = reading.get('value')
         accepted = (bar_statuses is None or bar_statuses[index] in ('ok', 'maximum_changed', 'side_only'))
         valid = fresh and accepted and value is not None
+        interval = reading.get('confirmed_range')
+        range_valid = bool(fresh and interval and (bar_statuses is None or bar_statuses[index] in ('unreadable','bounded_conflict')))
         old = previous.get('resources', {}).get(name, {})
         last_known = old.get('last_known')
-        expires = now_ms + max(0, max_age_ms-age_ms) if valid else now_ms
+        expires = now_ms + max(0, max_age_ms-age_ms) if valid or range_valid else now_ms
         if valid:
             last_known = {'value': value, 'source': reading.get('source', 'top_text'),
                           'observed_at_unix_ms': now_ms-age_ms,
@@ -161,8 +163,8 @@ def publish(path, status, readings=None, age_ms=None, max_age_ms=5000, bar_statu
         effective_maximum = (value.get('maximum') or value.get('last_confirmed_maximum')) if valid else None
         effective_percent = 100*value['current']/effective_maximum if effective_maximum and valid else None
         resources[name] = {
-            'valid': valid, 'quality': reading.get('quality', 'exact') if valid else ('stale' if last_known else 'unavailable'),
-            'source': reading.get('source', 'top_text') if valid else None,
+            'valid': valid, 'quality': reading.get('quality', 'exact') if valid or range_valid else ('stale' if last_known else 'unavailable'),
+            'source': reading.get('source', 'top_text') if valid or range_valid else None,
             'verification': reading.get('verification', 'not_checked') if fresh else 'not_checked',
             'verified_current': bool(valid and reading.get('verification') in ('current_agrees','current_agrees_without_color')),
             'confirmation': reading.get('confirmation') if fresh else None,
@@ -170,10 +172,11 @@ def publish(path, status, readings=None, age_ms=None, max_age_ms=5000, bar_statu
             'text_occlusion':reading.get('text_occlusion'),
             'fill': reading.get('fill') if fresh else None,
             'value': value if valid else None,
+            'range_valid':range_valid, 'value_range':interval if range_valid else None,
             'effective_maximum':effective_maximum, 'effective_percent':effective_percent,
             'maximum_is_cached':bool(valid and value.get('maximum') is None and effective_maximum),
             'reason': (bar_statuses[index] if fresh and bar_statuses else status),
-            'observed_at_unix_ms': now_ms-age_ms if valid else None,
+            'observed_at_unix_ms': now_ms-age_ms if valid or range_valid else None,
             'expires_at_unix_ms': expires,
             'last_known': last_known}
         data[name] = value if valid else None
@@ -493,6 +496,8 @@ def main():
                     bar_status = guard.update(reading['value'])
                     if reading.get('verification') == 'conflict':
                         bar_status = 'source_conflict'
+                    if reading.get('confirmed_range') is not None:
+                        bar_status='bounded_conflict'
                     statuses.append(bar_status)
                 result_age = marker_age + (end-received)*1000
                 status = result_status(marker_status, marker_age, (end-received)*1000, statuses)

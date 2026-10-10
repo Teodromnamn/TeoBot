@@ -49,6 +49,13 @@ class DashboardTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'side covered'):
             self.build([{'current':210,'maximum':210}, {'current':240,'maximum':240}], Analyzer)
 
+    def test_confirmed_range_is_not_displayed_as_exact(self):
+        title,detail,_=resource_text({'valid':False,'range_valid':True,
+            'value_range':{'lower':5,'upper':6,'maximum':100,'lower_percent':5},
+            'observed_at_unix_ms':900},1000)
+        self.assertIn('5–6 / 100',title)
+        self.assertIn('niepewny',detail)
+
     def test_invalid_resource_does_not_display_history(self):
         text, _, percent = resource_text({'valid':False, 'value':{'current':111},
             'last_known':{'value':{'current':111}}}, 1000)
