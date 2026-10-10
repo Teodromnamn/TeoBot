@@ -53,6 +53,17 @@ def inspect_top_text(crop, resource=None):
         if area>=20 and w>=4 and h>=4:
             return {'occluded':True,'status':'ZASLONIETY','reason':'foreign_colored_object',
                     'rectangle':[left+int(x),int(y),int(w),int(h)],'foreign_pixels':int(area)}
+    # Dark item outlines can cross a digit without enough saturated pixels
+    # to pass the colored-object test. Normal white/antialiased glyphs fit
+    # the row background-to-white model; their dark shadows remain isolated
+    # narrow fragments. Require a connected, two-dimensional foreign patch.
+    residual=(distance>40).astype(np.uint8)
+    residual[:2]=0;residual[-2:]=0
+    _,_,dark_objects,_=cv2.connectedComponentsWithStats(residual,8)
+    for x,y,w,h,area in dark_objects[1:]:
+        if area>=20 and w>=4 and h>=4:
+            return {'occluded':True,'status':'ZASLONIETY','reason':'foreign_object_outline',
+                    'rectangle':[left+int(x),int(y),int(w),int(h)],'foreign_pixels':int(area)}
     # Flat gray rectangles are foreign UI fragments, unlike curved glyph ink.
     # Exclude white cores and dark background; inspect connected pixels only.
     gray=((sat<5)&(val>=100)&(val<240)).astype(np.uint8)

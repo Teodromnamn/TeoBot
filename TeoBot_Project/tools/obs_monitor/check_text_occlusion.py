@@ -25,6 +25,20 @@ class Tests(unittest.TestCase):
         self.assertTrue(result['occluded'])
         self.assertEqual(result['reason'],'neutral_popup_clips_text_edge')
 
+    def test_dark_diagonal_item_outline_is_occluded(self):
+        crop=np.full((14,770,3),(160,75,10),np.uint8)
+        for y in range(2,12):crop[y,370+y:373+y]=[10,20,25]
+        result=inspect_top_text(crop,'mp')
+        self.assertTrue(result['occluded'])
+        self.assertEqual(result['reason'],'foreign_object_outline')
+
+    def test_isolated_dark_glyph_shadows_are_not_occlusion(self):
+        crop=np.full((14,770,3),(160,75,10),np.uint8)
+        for x in range(360,408,8):
+            crop[3:11,x:x+2]=255
+            crop[4:11,x+2]=0
+        self.assertFalse(inspect_top_text(crop,'mp')['occluded'])
+
     def test_normal_bevel_at_bottom_is_not_popup(self):
         crop=np.full((14,770,3),(160,75,10),np.uint8)
         crop[12:14]=90
