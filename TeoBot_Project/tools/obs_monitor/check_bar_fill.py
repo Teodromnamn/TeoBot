@@ -126,6 +126,15 @@ class NativeSidebarContourTests(unittest.TestCase):
             'sidebar':{'available':False,'reason':'sidebar_contour_occluded'}},215)
         self.assertIsNone(result['value'])
 
+    def test_top_edge_overlay_uses_clean_sidebar(self):
+        from source_selection import select_source
+        for case in self.fixture['top_edge']:
+            evidence=FillEvidence(self.decode(case['reference']),case['resource']).measure(self.decode(case['image']))
+            self.assertFalse(evidence['available'])
+            result=select_source({'value':None},case['side'],{'top':evidence,'sidebar':case['sidebar']},case['maximum'])
+            self.assertEqual(result['value']['current'],case['maximum'])
+            self.assertEqual(result['source'],'side_text')
+
     def test_native_full_and_empty_tail_preserve_contour(self):
         for case in self.fixture['clean']:
             with self.subTest(resource=case['resource']):

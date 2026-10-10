@@ -20,6 +20,8 @@ class FillEvidence:
         self.shape = full_image.shape
         self.sidebar_rim_rows = np.array([], dtype=int)
         self.sidebar_full_profile = None
+        self.sidebar_rim_mask = None
+        self.sidebar_reference_value = None
         if sidebar:
             hsv = cv2.cvtColor(full_image, cv2.COLOR_BGR2HSV)
             # Learn the saturated upper bevel, not the changing fill body.
@@ -30,6 +32,12 @@ class FillEvidence:
                 self.sidebar_full_profile = profile
                 self.sidebar_rim_rows = np.array([y for y in range(min(2, len(profile)))
                     if np.mean((core[y, :, 1] > 90) & (core[y, :, 2] > 60)) >= .90], dtype=int)
+        if sidebar and len(self.sidebar_rim_rows):
+            h,s,v=cv2.split(cv2.cvtColor(full_image,cv2.COLOR_BGR2HSV))
+            native=(h >= 95) & (h <= 135)
+            if resource == 'hp': native |= (h <= 12) | (h >= 165)
+            self.sidebar_rim_mask=native & (s >= 45) & (v >= 40)
+            self.sidebar_reference_value=v.astype(float)
         self.resource = resource
         self.sidebar = sidebar
         mask = color_mask(full_image, resource, sidebar)
@@ -51,6 +59,9 @@ class FillEvidence:
             # Small gold mana suffix glyphs are normal and remain allowed.
             foreign=((saturation > 90) & (value > 80) &
                      ~color_mask(image, self.resource, self.sidebar)).astype(np.uint8)
+            edge_width=max(4,image.shape[1]//10)
+            if (np.count_nonzero(foreign[:,:edge_width])+np.count_nonzero(foreign[:,-edge_width:])) >= 4:
+                return {'available':False,'reason':'foreign_color_overlay'}
             _,_,objects,_=cv2.connectedComponentsWithStats(foreign,8)
             for x,y,w,h,area in objects[1:]:
                 if (h >= max(6,image.shape[0]-4) and
@@ -80,16 +91,22 @@ class FillEvidence:
                 if self.resource == 'hp':
                     native_hue |= (hue <= 12) | (hue >= 165)
                 intact = native_hue & (saturation >= 45) & (value >= 40)
-                broken = np.any(~intact[rim, 4:-4], axis=0)
+                broken = np.any(~intact[rim] & self.sidebar_rim_mask[rim], axis=0)
+                broken[:4] = False
+                corner_error=np.mean(np.abs(value[rim].astype(float)-self.sidebar_reference_value[rim]),axis=0)
+                corner_broken=corner_error[-6:] > 30
+                near_full = np.all(color_mask(image,self.resource,True)[self.rows,-8:-6])
+                if near_full and np.any(np.convolve(corner_broken.astype(int),np.ones(2,dtype=int),'valid') == 2):
+                    return {'available':False,'reason':'sidebar_contour_occluded'}
                 # A lower item edge can miss the upper rim entirely. Native
                 # full/empty central body is shaded, never a near-black stripe.
-                broken |= np.any(value[self.rows, 4:-4] < 40, axis=0)
+                broken[4:-4] |= np.any(value[self.rows, 4:-4] < 40, axis=0)
                 # Resource-colored objects can preserve hue and the upper rim.
                 # A filled native column retains the calibrated vertical bevel;
                 # compare that shading only where body pixels claim to be fill.
                 filled = np.any(color_mask(image,self.resource,True)[self.rows],axis=0)
                 shading_error = np.mean(np.abs(value.astype(float)-self.sidebar_full_profile[:,None]),axis=0)
-                broken |= (filled & (shading_error > 30))[4:-4]
+                broken[4:-4] |= (filled & (shading_error > 30))[4:-4]
                 # Ignore isolated compression pixels; three adjoining columns
                 # are enough to identify a border cutting across the bevel.
                 if len(broken) >= 3 and np.any(np.convolve(broken.astype(int), np.ones(3,dtype=int), 'valid') == 3):
