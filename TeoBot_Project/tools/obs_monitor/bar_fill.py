@@ -19,6 +19,7 @@ class FillEvidence:
     def __init__(self, full_image, resource, sidebar=False):
         self.shape = full_image.shape
         self.sidebar_rim_rows = np.array([], dtype=int)
+        self.sidebar_full_profile = None
         if sidebar:
             hsv = cv2.cvtColor(full_image, cv2.COLOR_BGR2HSV)
             # Learn the saturated upper bevel, not the changing fill body.
@@ -26,6 +27,7 @@ class FillEvidence:
             core = hsv[:, 4:-4] if hsv.shape[1] > 12 else hsv
             profile = np.median(core[:, :, 2], axis=1)
             if np.ptp(profile) >= 20:
+                self.sidebar_full_profile = profile
                 self.sidebar_rim_rows = np.array([y for y in range(min(2, len(profile)))
                     if np.mean((core[y, :, 1] > 90) & (core[y, :, 2] > 60)) >= .90], dtype=int)
         self.resource = resource
@@ -82,6 +84,12 @@ class FillEvidence:
                 # A lower item edge can miss the upper rim entirely. Native
                 # full/empty central body is shaded, never a near-black stripe.
                 broken |= np.any(value[self.rows, 4:-4] < 40, axis=0)
+                # Resource-colored objects can preserve hue and the upper rim.
+                # A filled native column retains the calibrated vertical bevel;
+                # compare that shading only where body pixels claim to be fill.
+                filled = np.any(color_mask(image,self.resource,True)[self.rows],axis=0)
+                shading_error = np.mean(np.abs(value.astype(float)-self.sidebar_full_profile[:,None]),axis=0)
+                broken |= (filled & (shading_error > 30))[4:-4]
                 # Ignore isolated compression pixels; three adjoining columns
                 # are enough to identify a border cutting across the bevel.
                 if len(broken) >= 3 and np.any(np.convolve(broken.astype(int), np.ones(3,dtype=int), 'valid') == 3):

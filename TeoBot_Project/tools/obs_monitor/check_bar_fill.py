@@ -119,6 +119,13 @@ class NativeSidebarContourTests(unittest.TestCase):
                 self.assertEqual(result['value']['current'],case['current'])
                 self.assertTrue(result['source_checks']['top_color_consistent'])
 
+    def test_wrong_top_number_is_rejected_even_if_sidebar_is_unavailable(self):
+        from source_selection import select_source
+        result = select_source({'value':{'current':108,'maximum':215}},
+            {'current':None}, {'top':{'available':True,'lower_percent':46.84,'upper_percent':49.34},
+            'sidebar':{'available':False,'reason':'sidebar_contour_occluded'}},215)
+        self.assertIsNone(result['value'])
+
     def test_native_full_and_empty_tail_preserve_contour(self):
         for case in self.fixture['clean']:
             with self.subTest(resource=case['resource']):
