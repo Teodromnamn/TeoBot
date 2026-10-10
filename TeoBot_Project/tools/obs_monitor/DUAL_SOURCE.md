@@ -365,3 +365,35 @@ Test bez gry/OBS i bez tworzenia okna:
 ```bash
 /c/_MS/GIT/TeoBot_OCR_venv/Scripts/python.exe -X utf8 tools/obs_monitor/check_monitor_dashboard.py
 ```
+
+
+### Observation-only decisions
+
+`run_observation_diagnostic.py` wraps the resident monitor and its production
+publication function. It never dispatches input. Defaults are HP below 50%, MP
+below 25%, and independent 1000 ms simulated cooldowns. These cooldowns are test
+assumptions, not measured game cooldowns. New observations are required for
+repeat decisions; invalid, expired, unconfirmed and threshold-straddling values
+cannot produce a would-execute decision. A missing HP resource does not block MP.
+
+Live example (OBS and game required):
+
+```bash
+python -X utf8 tools/obs_monitor/run_observation_diagnostic.py --seconds 180 --hp-threshold 50 --mp-threshold 25 --threshold-unit percent --cooldown-ms 1000
+```
+
+Logs `observation_decisions.jsonl` and `observation_summary.json` are included in
+the normal long-diagnostic ZIP. Logging is synchronous and adds diagnostic
+work; an explicit log failure does not invalidate OCR. No production healing
+or shared cooldown groups are implemented by this observer.
+
+Offline example using the independently labeled 1490-frame native audit:
+
+```bash
+python -X utf8 tools/obs_monitor/replay_observation_policy.py item_outline_native_audit/replay_labeled.jsonl long_diagnostic_20261010_220835_664781.zip --hp-threshold 100 --mp-threshold 100 --threshold-unit current --cooldown-ms 1000
+```
+
+The high MP threshold deliberately exercises repeat/cooldown decisions. Offline
+replay uses production publication and recorded sample intervals, with zero
+simulated camera age. It does not replay live minimization events or make the
+recorded character heal when a simulated action is requested.
