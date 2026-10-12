@@ -104,6 +104,15 @@ def recognize_top(engine, image, glyph_retry=False, raw_crop=None, resource=None
             result['rejected_ocr_value']=result['value']
             result['value']=None
             result['reason']='current_digit_count_mismatch'
+            from glyph_ocr import recover_current
+            current_recovery=recover_current(engine,image)
+            result['current_glyph_recovery']=current_recovery
+            text=current_recovery.get('text')
+            previous=result['rejected_ocr_value']
+            if text is not None and len(text)==visible and int(text)<=previous['maximum']:
+                result['value']=dict(previous,current=int(text),percent=100*int(text)/previous['maximum'])
+                result['method']='current_glyphs_with_original_maximum'
+                result.pop('reason',None)
     if glyph_retry and result['value'] is None:
         recovery = recover_ratio(engine, image)
         result['glyph_recovery'] = recovery

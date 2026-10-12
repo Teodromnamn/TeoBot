@@ -28,6 +28,15 @@ def read_digits(engine, image):
         # Two segmentation modes must independently return the same ONE digit.
         a = engine.recognize(padded, psm=10).txts[0].strip()
         b = engine.recognize(padded, psm=7).txts[0].strip()
+        # Windows Tesseract 5.5 can return empty PSM 7/10 for a narrow '1'.
+        # Do not override conflicting digits or extend this to arbitrary glyphs.
+        if a == b == '' and part.shape[1] / part.shape[0] <= .5:
+            c = engine.recognize(padded, psm=8).txts[0].strip()
+            scaled = cv2.resize(part, None, fx=2, fy=2, interpolation=cv2.INTER_NEAREST)
+            scaled = cv2.copyMakeBorder(scaled, 16,16,16,16,cv2.BORDER_CONSTANT,value=255)
+            d = engine.recognize(scaled, psm=8).txts[0].strip() if c == '1' else ''
+            if c == d == '1':
+                a = b = '1'
         if not re.fullmatch('[0-9]', a) or a != b:
             return {'text':None, 'reason':'glyph_modes_disagree', 'raw':[a,b]}
         texts.append(a)
@@ -107,3 +116,16 @@ def ratio_current_groups(image):
     parts=[p for p in groups(clean) if p.shape[0]>=6]
     slashes=[i for i,p in enumerate(parts) if is_slash(p)]
     return slashes[0] if slashes and slashes[0]>0 else None
+
+
+def recover_current(engine, image):
+    """Recover current only; never reinterpret the already parsed maximum."""
+    clean=image.copy()
+    rows=np.flatnonzero(np.any(clean<128,axis=1))
+    if len(rows) and np.count_nonzero(clean[rows[-1]]<128)>image.shape[1]*.65:
+        clean[max(0,rows[-1]-1):rows[-1]+1]=255
+    parts=[p for p in groups(clean) if p.shape[0]>=6]
+    slashes=[i for i,p in enumerate(parts) if is_slash(p)]
+    if not slashes or slashes[0]==0:
+        return {'text':None,'reason':'no_visual_separator'}
+    return read_number(engine,join(parts[:slashes[0]]))

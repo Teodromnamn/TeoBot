@@ -69,6 +69,24 @@ class Tests(unittest.TestCase):
         e.recognize.side_effect=lambda image,psm:SimpleNamespace(txts=['1' if psm==10 else '11'])
         self.assertEqual(recover_ratio(e,image)['text'],'11/11')
 
+    def test_windows_blank_modes_narrow_one_fallback(self):
+        e=Mock()
+        e.recognize.side_effect=lambda image,psm:SimpleNamespace(txts=['1' if psm==8 else ''])
+        self.assertEqual(read_digits(e,self.image())['text'],'111')
+
+    def test_narrow_one_fallback_requires_both_sizes(self):
+        e=Mock();e.recognize.side_effect=[SimpleNamespace(txts=[x]) for x in ('','','1','7')]
+        self.assertIsNone(read_digits(e,self.image())['text'])
+
+    def test_recovered_current_keeps_original_maximum(self):
+        from test_obs_tesseract import recognize_top
+        e=Mock();e.recognize.return_value=SimpleNamespace(txts=['1/215'],scores=[0.])
+        with patch('glyph_ocr.ratio_current_groups',return_value=3),patch('glyph_ocr.recover_current',return_value={'text':'111','reason':None}),patch('test_obs_tesseract.recover_ratio') as ratio:
+            result=recognize_top(e,self.image(),glyph_retry=True)
+        self.assertEqual(result['value']['current'],111)
+        self.assertEqual(result['value']['maximum'],215)
+        ratio.assert_not_called()
+
     def test_separator_is_required_visually(self):
         e=Mock()
         self.assertIsNone(recover_ratio(e,self.image())['text'])
