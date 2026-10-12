@@ -1,5 +1,29 @@
 # Experimental native font counters
 
+## Complete available-archive regression
+
+```bash
+git pull --ff-only
+/c/_MS/GIT/TeoBot_OCR_venv/Scripts/python.exe -X utf8 tools/obs_monitor/run_template_regression.py --root . --output template_regression
+```
+
+No game, OBS or Tesseract required. The script discovers crop archives, handles
+long-diagnostic bundles and nested synthetic hp_mp packages, and deduplicates
+datasets by SHA-256. Available manual/synthetic labels are checked for matching
+case coverage; native CSV crop hashes are checked when supplied. The model's
+training portion is reported separately. Unlabeled archives receive no accuracy
+verdict. Results go to summary.json and candidates.jsonl in the output folder.
+The current prototype DOES NOT pass this larger regression: missing candidates
+and wrong-only candidate sets remain. Exit code 1 indicates those test failures,
+not a failure to write the report. Existing live OCR is unaffected.
+
+The checked result is template_regression_results_v1.json: 31 unique datasets,
+17388 frames, 26092 labeled test currents; 25916 have a correct candidate,
+170 have no candidate and 6 retain only a source differing from the reference
+in the synthetic source-skew suite. Native recordings contribute 35 of the
+missing candidates and no wrong-only set. These counts do not test production
+selection, confirmation or maximum recognition.
+
 Offline experiment only. Live OCR, confirmation and actions remain unchanged.
 This version reads current HP/MP, not maxima. It uses no Tesseract for recognition.
 Top and side fonts have separate templates. Matching checks shape overlap, aspect

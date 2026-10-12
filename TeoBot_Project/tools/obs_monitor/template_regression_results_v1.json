@@ -1,0 +1,2062 @@
+{
+  "model_sha256": "60905fc4eda69395778a52697f243b90856480984adf582e127e8fe4f2ee57cb",
+  "training_currents": 3999,
+  "test_labeled_currents": 26092,
+  "unlabeled_currents": 4685,
+  "correct_candidate_available": 25916,
+  "missing_candidates": 170,
+  "only_wrong_candidates": 6,
+  "conflicting_candidates": 96,
+  "unique_test_pixel_pairs": 3270,
+  "test_pixel_pairs_also_in_training": 11,
+  "median_counter_ms": 0.44913000010637916,
+  "note": "Raw CURRENT candidates only, not production selection/confirmation/maxima/actions. Training separated from test coverage. Synthetic source differences may be intentional skew. Unlabeled archives have no accuracy verdict; repeated pixel pairs reported.",
+  "fully_labeled_test_passed": false,
+  "production_changed": false,
+  "frames_processed": 17388,
+  "unique_archives": 31,
+  "failure_groups": [
+    {
+      "dataset": "dataset.zip",
+      "archive": "digit_transition_test/dataset.zip",
+      "resource": "hp",
+      "expected_current": 99,
+      "kind": "missing",
+      "outputs": {
+        "top": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.35339,
+              "margin": 0.09341
+            }
+          ]
+        },
+        "side": {
+          "current": null,
+          "reason": "invalid_glyph_count"
+        }
+      },
+      "cases": [
+        "case_00051",
+        "case_00052",
+        "case_00053",
+        "case_00057",
+        "case_00058",
+        "case_00059",
+        "case_00063",
+        "case_00064",
+        "case_00065",
+        "case_00069",
+        "case_00070",
+        "case_00071",
+        "case_00076",
+        "case_00082",
+        "case_00088",
+        "case_00094"
+      ]
+    },
+    {
+      "dataset": "dataset.zip",
+      "archive": "digit_transition_test/dataset.zip",
+      "resource": "hp",
+      "expected_current": 100,
+      "kind": "missing",
+      "outputs": {
+        "top": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "1",
+              "error": 0.0,
+              "margin": 1.0
+            },
+            {
+              "digit": "0",
+              "error": 0.23787,
+              "margin": 0.06037
+            }
+          ]
+        },
+        "side": {
+          "current": null,
+          "reason": "invalid_glyph_count"
+        }
+      },
+      "cases": [
+        "case_00054",
+        "case_00055",
+        "case_00056",
+        "case_00060",
+        "case_00061",
+        "case_00062",
+        "case_00066",
+        "case_00067",
+        "case_00068",
+        "case_00072",
+        "case_00073",
+        "case_00074",
+        "case_00079",
+        "case_00085",
+        "case_00091",
+        "case_00097"
+      ]
+    },
+    {
+      "dataset": "dataset.zip",
+      "archive": "dynamic_transition_test/dataset.zip",
+      "resource": "hp",
+      "expected_current": 99,
+      "kind": "missing",
+      "outputs": {
+        "top": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.35339,
+              "margin": 0.09341
+            }
+          ]
+        },
+        "side": {
+          "current": null,
+          "reason": "invalid_glyph_count"
+        }
+      },
+      "cases": [
+        "case_00021",
+        "case_00022",
+        "case_00023",
+        "case_00024",
+        "case_00026",
+        "case_00045",
+        "case_00046",
+        "case_00047",
+        "case_00048",
+        "case_00050",
+        "case_00078",
+        "case_00079",
+        "case_00080",
+        "case_00082",
+        "case_00102",
+        "case_00103",
+        "case_00104",
+        "case_00106",
+        "case_00135",
+        "case_00136",
+        "case_00137",
+        "case_00138",
+        "case_00140",
+        "case_00159",
+        "case_00160",
+        "case_00161",
+        "case_00162",
+        "case_00164"
+      ]
+    },
+    {
+      "dataset": "ocr_dataset_20261010_224456_538482.zip",
+      "archive": "native_oct12/all_records/long_diagnostic_20261010_224456_007948.zip",
+      "resource": "hp",
+      "expected_current": 101,
+      "kind": "missing",
+      "outputs": {
+        "top": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "1",
+              "error": 0.194,
+              "margin": 0.806
+            }
+          ]
+        },
+        "side": {
+          "current": null,
+          "reason": "occlusion_filter"
+        }
+      },
+      "cases": [
+        "case_01353"
+      ]
+    },
+    {
+      "dataset": "ocr_dataset_20261006_104102_660600.zip",
+      "archive": "native_oct12/recovered_older/ocr_dataset_20261006_104102_660600.zip",
+      "resource": "hp",
+      "expected_current": 93,
+      "kind": "missing",
+      "outputs": {
+        "top": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.39095,
+              "margin": 0.08891
+            }
+          ]
+        },
+        "side": {
+          "current": null,
+          "reason": "occlusion_filter"
+        }
+      },
+      "cases": [
+        "case_00497",
+        "case_00498",
+        "case_00499"
+      ]
+    },
+    {
+      "dataset": "ocr_dataset_20261006_104102_660600.zip",
+      "archive": "native_oct12/recovered_older/ocr_dataset_20261006_104102_660600.zip",
+      "resource": "hp",
+      "expected_current": 96,
+      "kind": "missing",
+      "outputs": {
+        "top": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.35339,
+              "margin": 0.09341
+            }
+          ]
+        },
+        "side": {
+          "current": null,
+          "reason": "occlusion_filter"
+        }
+      },
+      "cases": [
+        "case_00501",
+        "case_00502",
+        "case_00503",
+        "case_00504"
+      ]
+    },
+    {
+      "dataset": "ocr_dataset_20261006_104102_660600.zip",
+      "archive": "native_oct12/recovered_older/ocr_dataset_20261006_104102_660600.zip",
+      "resource": "hp",
+      "expected_current": 110,
+      "kind": "missing",
+      "outputs": {
+        "top": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "1",
+              "error": 0.0,
+              "margin": 1.0
+            },
+            {
+              "digit": "1",
+              "error": 0.0,
+              "margin": 1.0
+            },
+            {
+              "digit": "0",
+              "error": 0.23787,
+              "margin": 0.06037
+            }
+          ]
+        },
+        "side": {
+          "current": null,
+          "reason": "occlusion_filter"
+        }
+      },
+      "cases": [
+        "case_00546"
+      ]
+    },
+    {
+      "dataset": "synthetic_occlusion.zip",
+      "archive": "regression_test/side/synthetic_occlusion.zip",
+      "resource": "hp",
+      "expected_current": 99,
+      "kind": "missing",
+      "outputs": {
+        "top": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.35339,
+              "margin": 0.09341
+            }
+          ]
+        },
+        "side": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.35531,
+              "margin": 0.15643
+            }
+          ]
+        }
+      },
+      "cases": [
+        "case_00084",
+        "case_00085",
+        "case_00086",
+        "case_00105",
+        "case_00106",
+        "case_00107",
+        "case_00126",
+        "case_00127",
+        "case_00128"
+      ]
+    },
+    {
+      "dataset": "synthetic_occlusion.zip",
+      "archive": "regression_test/side/synthetic_occlusion.zip",
+      "resource": "hp",
+      "expected_current": 99,
+      "kind": "missing",
+      "outputs": {
+        "top": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.35339,
+              "margin": 0.09341
+            }
+          ]
+        },
+        "side": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "0",
+              "error": 1.0,
+              "margin": 0.0
+            }
+          ]
+        }
+      },
+      "cases": [
+        "case_00087",
+        "case_00088",
+        "case_00089",
+        "case_00108",
+        "case_00109",
+        "case_00110",
+        "case_00129",
+        "case_00130",
+        "case_00131"
+      ]
+    },
+    {
+      "dataset": "synthetic_occlusion.zip",
+      "archive": "regression_test/side/synthetic_occlusion.zip",
+      "resource": "hp",
+      "expected_current": 99,
+      "kind": "missing",
+      "outputs": {
+        "top": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.35339,
+              "margin": 0.09341
+            }
+          ]
+        },
+        "side": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "1",
+              "error": 0.54167,
+              "margin": 0.45833
+            }
+          ]
+        }
+      },
+      "cases": [
+        "case_00090",
+        "case_00091",
+        "case_00092",
+        "case_00111",
+        "case_00112",
+        "case_00113",
+        "case_00132",
+        "case_00133",
+        "case_00134"
+      ]
+    },
+    {
+      "dataset": "synthetic_occlusion.zip",
+      "archive": "regression_test/side/synthetic_occlusion.zip",
+      "resource": "hp",
+      "expected_current": 99,
+      "kind": "missing",
+      "outputs": {
+        "top": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.35339,
+              "margin": 0.09341
+            }
+          ]
+        },
+        "side": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.0,
+              "margin": 0.30435
+            },
+            {
+              "digit": "1",
+              "error": 0.53846,
+              "margin": 0.46154
+            }
+          ]
+        }
+      },
+      "cases": [
+        "case_00093",
+        "case_00094",
+        "case_00095",
+        "case_00114",
+        "case_00115",
+        "case_00116",
+        "case_00135",
+        "case_00136",
+        "case_00137"
+      ]
+    },
+    {
+      "dataset": "synthetic_occlusion.zip",
+      "archive": "regression_test/side/synthetic_occlusion.zip",
+      "resource": "hp",
+      "expected_current": 99,
+      "kind": "missing",
+      "outputs": {
+        "top": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.35339,
+              "margin": 0.09341
+            }
+          ]
+        },
+        "side": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.0,
+              "margin": 0.30435
+            },
+            {
+              "digit": "0",
+              "error": 1.0,
+              "margin": 0.0
+            }
+          ]
+        }
+      },
+      "cases": [
+        "case_00096",
+        "case_00097",
+        "case_00098",
+        "case_00117",
+        "case_00118",
+        "case_00119",
+        "case_00138",
+        "case_00139",
+        "case_00140"
+      ]
+    },
+    {
+      "dataset": "synthetic_occlusion.zip",
+      "archive": "regression_test/side/synthetic_occlusion.zip",
+      "resource": "hp",
+      "expected_current": 99,
+      "kind": "missing",
+      "outputs": {
+        "top": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.35339,
+              "margin": 0.09341
+            }
+          ]
+        },
+        "side": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.0,
+              "margin": 0.30435
+            },
+            {
+              "digit": "9",
+              "error": 0.25146,
+              "margin": 0.14706
+            }
+          ]
+        }
+      },
+      "cases": [
+        "case_00099",
+        "case_00100",
+        "case_00101",
+        "case_00120",
+        "case_00121",
+        "case_00122",
+        "case_00141",
+        "case_00142",
+        "case_00143"
+      ]
+    },
+    {
+      "dataset": "synthetic_occlusion.zip",
+      "archive": "regression_test/side/synthetic_occlusion.zip",
+      "resource": "hp",
+      "expected_current": 99,
+      "kind": "missing",
+      "outputs": {
+        "top": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.35339,
+              "margin": 0.09341
+            }
+          ]
+        },
+        "side": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "0",
+              "error": 0.4138,
+              "margin": 0.04653
+            }
+          ]
+        }
+      },
+      "cases": [
+        "case_00147",
+        "case_00148",
+        "case_00149"
+      ]
+    },
+    {
+      "dataset": "synthetic_occlusion.zip",
+      "archive": "regression_test/side/synthetic_occlusion.zip",
+      "resource": "hp",
+      "expected_current": 99,
+      "kind": "missing",
+      "outputs": {
+        "top": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.35339,
+              "margin": 0.09341
+            }
+          ]
+        },
+        "side": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.41348,
+              "margin": 0.0636
+            }
+          ]
+        }
+      },
+      "cases": [
+        "case_00150",
+        "case_00151",
+        "case_00152"
+      ]
+    },
+    {
+      "dataset": "synthetic_occlusion.zip",
+      "archive": "regression_test/side/synthetic_occlusion.zip",
+      "resource": "hp",
+      "expected_current": 99,
+      "kind": "missing",
+      "outputs": {
+        "top": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.35339,
+              "margin": 0.09341
+            }
+          ]
+        },
+        "side": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.42074,
+              "margin": 0.02724
+            }
+          ]
+        }
+      },
+      "cases": [
+        "case_00153",
+        "case_00154",
+        "case_00155"
+      ]
+    },
+    {
+      "dataset": "synthetic_occlusion.zip",
+      "archive": "regression_test/side/synthetic_occlusion.zip",
+      "resource": "hp",
+      "expected_current": 99,
+      "kind": "missing",
+      "outputs": {
+        "top": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.35339,
+              "margin": 0.09341
+            }
+          ]
+        },
+        "side": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.0,
+              "margin": 0.30435
+            },
+            {
+              "digit": "0",
+              "error": 0.36821,
+              "margin": 0.05829
+            }
+          ]
+        }
+      },
+      "cases": [
+        "case_00156",
+        "case_00157",
+        "case_00158"
+      ]
+    },
+    {
+      "dataset": "synthetic_occlusion.zip",
+      "archive": "regression_test/side/synthetic_occlusion.zip",
+      "resource": "hp",
+      "expected_current": 99,
+      "kind": "missing",
+      "outputs": {
+        "top": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.35339,
+              "margin": 0.09341
+            }
+          ]
+        },
+        "side": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.0,
+              "margin": 0.30435
+            },
+            {
+              "digit": "9",
+              "error": 0.40856,
+              "margin": 0.0731
+            }
+          ]
+        }
+      },
+      "cases": [
+        "case_00159",
+        "case_00160",
+        "case_00161"
+      ]
+    },
+    {
+      "dataset": "synthetic_occlusion.zip",
+      "archive": "regression_test/side/synthetic_occlusion.zip",
+      "resource": "hp",
+      "expected_current": 99,
+      "kind": "missing",
+      "outputs": {
+        "top": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.35339,
+              "margin": 0.09341
+            }
+          ]
+        },
+        "side": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.0,
+              "margin": 0.30435
+            },
+            {
+              "digit": "9",
+              "error": 0.5108,
+              "margin": 0.03782
+            }
+          ]
+        }
+      },
+      "cases": [
+        "case_00162",
+        "case_00163",
+        "case_00164"
+      ]
+    },
+    {
+      "dataset": "synthetic_occlusion.zip",
+      "archive": "regression_test/side/synthetic_occlusion.zip",
+      "resource": "hp",
+      "expected_current": 99,
+      "kind": "missing",
+      "outputs": {
+        "top": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.35339,
+              "margin": 0.09341
+            }
+          ]
+        },
+        "side": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.0,
+              "margin": 0.30435
+            },
+            {
+              "digit": "9",
+              "error": 0.0,
+              "margin": 0.30435
+            },
+            {
+              "digit": "0",
+              "error": 1.0,
+              "margin": 0.0
+            }
+          ]
+        }
+      },
+      "cases": [
+        "case_00165",
+        "case_00166",
+        "case_00167"
+      ]
+    },
+    {
+      "dataset": "dataset.zip",
+      "archive": "regression_test/source_skew/dataset.zip",
+      "resource": "hp",
+      "expected_current": 99,
+      "kind": "only_wrong_candidates",
+      "outputs": {
+        "top": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "9",
+              "error": 0.35339,
+              "margin": 0.09341
+            }
+          ]
+        },
+        "side": {
+          "current": 57,
+          "reason": null,
+          "glyphs": [
+            {
+              "digit": "5",
+              "error": 0.0,
+              "margin": 0.30693
+            },
+            {
+              "digit": "7",
+              "error": 0.0,
+              "margin": 0.50515
+            }
+          ]
+        }
+      },
+      "cases": [
+        "case_00033",
+        "case_00034",
+        "case_00035",
+        "case_00063",
+        "case_00064",
+        "case_00065"
+      ]
+    },
+    {
+      "dataset": "ocr_dataset_20261008_185859_003221.zip",
+      "archive": "upload/ocr_dataset_20261008_185859_003221.zip",
+      "resource": "hp",
+      "expected_current": 119,
+      "kind": "missing",
+      "outputs": {
+        "top": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "1",
+              "error": 0.0,
+              "margin": 1.0
+            },
+            {
+              "digit": "1",
+              "error": 0.0,
+              "margin": 1.0
+            },
+            {
+              "digit": "9",
+              "error": 0.35339,
+              "margin": 0.09341
+            }
+          ]
+        },
+        "side": {
+          "current": null,
+          "reason": "occlusion_filter"
+        }
+      },
+      "cases": [
+        "case_00183",
+        "case_00184",
+        "case_00185",
+        "case_00186",
+        "case_00187",
+        "case_00188",
+        "case_00189",
+        "case_00190"
+      ]
+    },
+    {
+      "dataset": "ocr_dataset_20261008_185859_003221.zip",
+      "archive": "upload/ocr_dataset_20261008_185859_003221.zip",
+      "resource": "hp",
+      "expected_current": 121,
+      "kind": "missing",
+      "outputs": {
+        "top": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "1",
+              "error": 0.0,
+              "margin": 1.0
+            },
+            {
+              "digit": "2",
+              "error": 0.45911,
+              "margin": 0.14527
+            }
+          ]
+        },
+        "side": {
+          "current": null,
+          "reason": "occlusion_filter"
+        }
+      },
+      "cases": [
+        "case_00191",
+        "case_00192"
+      ]
+    },
+    {
+      "dataset": "ocr_dataset_20261008_185859_003221.zip",
+      "archive": "upload/ocr_dataset_20261008_185859_003221.zip",
+      "resource": "hp",
+      "expected_current": 102,
+      "kind": "missing",
+      "outputs": {
+        "top": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "1",
+              "error": 0.0,
+              "margin": 1.0
+            },
+            {
+              "digit": "0",
+              "error": 0.23787,
+              "margin": 0.06037
+            }
+          ]
+        },
+        "side": {
+          "current": null,
+          "reason": "occlusion_filter"
+        }
+      },
+      "cases": [
+        "case_00202",
+        "case_00203",
+        "case_00204"
+      ]
+    },
+    {
+      "dataset": "ocr_dataset_20261008_185859_003221.zip",
+      "archive": "upload/ocr_dataset_20261008_185859_003221.zip",
+      "resource": "hp",
+      "expected_current": 104,
+      "kind": "missing",
+      "outputs": {
+        "top": {
+          "current": null,
+          "reason": "glyph_not_distinct",
+          "glyphs": [
+            {
+              "digit": "1",
+              "error": 0.0,
+              "margin": 1.0
+            },
+            {
+              "digit": "0",
+              "error": 0.23787,
+              "margin": 0.06037
+            }
+          ]
+        },
+        "side": {
+          "current": null,
+          "reason": "occlusion_filter"
+        }
+      },
+      "cases": [
+        "case_00205",
+        "case_00206",
+        "case_00207",
+        "case_00208",
+        "case_00209",
+        "case_00210",
+        "case_00211",
+        "case_00212",
+        "case_00213",
+        "case_00214",
+        "case_00215",
+        "case_00216",
+        "case_00217"
+      ]
+    }
+  ],
+  "scope": "Fixed prototype model, all available unique archives; no production OCR changes.",
+  "by_kind": {
+    "native_labeled": {
+      "frames": 12464,
+      "test_labeled_currents": 20928,
+      "candidate_correct_available": 20893,
+      "candidate_missing": 35,
+      "only_wrong_candidates": 0
+    },
+    "synthetic_labeled": {
+      "frames": 2609,
+      "test_labeled_currents": 5164,
+      "candidate_correct_available": 5023,
+      "candidate_missing": 135,
+      "only_wrong_candidates": 6
+    },
+    "unlabeled": {
+      "frames": 2315,
+      "test_labeled_currents": 0,
+      "candidate_correct_available": 0,
+      "candidate_missing": 0,
+      "only_wrong_candidates": 0
+    }
+  },
+  "datasets": [
+    {
+      "archive": "digit_transition_test/dataset.zip",
+      "dataset_name": "dataset.zip",
+      "dataset_sha256": "860ede83cda334b617834d7c2eb536fe1e33698408aec949f131f47719019ccf",
+      "kind": "synthetic_labeled",
+      "reference": "/workspace/scratch/a19a359bfc57/digit_transition_test/labels.csv",
+      "frames": 99,
+      "test_labeled_currents": 198,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 166,
+      "candidate_missing": 32,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 62,
+          "differs_reference": 0,
+          "unavailable": 56,
+          "occluded": 80,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 134,
+          "differs_reference": 0,
+          "unavailable": 64,
+          "occluded": 0,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "dynamic_transition_test/dataset.zip",
+      "dataset_name": "dataset.zip",
+      "dataset_sha256": "b64c4fe1ca440377a219dc82e569ce8d97fb1d0a8fdcc01ecab669a7ba413928",
+      "kind": "synthetic_labeled",
+      "reference": "/workspace/scratch/a19a359bfc57/dynamic_transition_test/labels.csv",
+      "frames": 183,
+      "test_labeled_currents": 366,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 338,
+      "candidate_missing": 28,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 190,
+          "differs_reference": 0,
+          "unavailable": 46,
+          "occluded": 130,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 226,
+          "differs_reference": 0,
+          "unavailable": 140,
+          "occluded": 0,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "interruption_test/dataset.zip",
+      "dataset_name": "dataset.zip",
+      "dataset_sha256": "c6a2474a9b46d9e149151c95c1d0f3a82b5f01d595886af53bede5038b0e7bbd",
+      "kind": "synthetic_labeled",
+      "reference": "/workspace/scratch/a19a359bfc57/interruption_test/labels.csv",
+      "frames": 16,
+      "test_labeled_currents": 26,
+      "training_currents": 0,
+      "unlabeled_currents": 6,
+      "candidate_correct_available": 26,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 26,
+          "differs_reference": 0,
+          "unavailable": 6,
+          "occluded": 0,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 26,
+          "differs_reference": 0,
+          "unavailable": 6,
+          "occluded": 0,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "long_oct10/ocr_dataset_20261010_200323_181063.zip",
+      "dataset_name": "ocr_dataset_20261010_200323_181063.zip",
+      "dataset_sha256": "8890e40875954664709ad6a6e675d4430f9960f6b394bc77587a1d56148b36df",
+      "kind": "native_labeled",
+      "reference": "long_native_labels.json",
+      "frames": 5281,
+      "test_labeled_currents": 6562,
+      "training_currents": 3999,
+      "unlabeled_currents": 1,
+      "candidate_correct_available": 6562,
+      "candidate_missing": 0,
+      "candidate_conflicting": 7,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 10029,
+          "differs_reference": 0,
+          "unavailable": 137,
+          "occluded": 395,
+          "unlabeled_available": 1
+        },
+        "side": {
+          "correct": 10221,
+          "differs_reference": 7,
+          "unavailable": 128,
+          "occluded": 205,
+          "unlabeled_available": 1
+        }
+      }
+    },
+    {
+      "archive": "native_oct12/all_records/long_diagnostic_20261010_214424_947506.zip",
+      "dataset_name": "ocr_dataset_20261010_214426_197073.zip",
+      "dataset_sha256": "fb0f9fa9658c58ac9533f0a2a9ed2d22a0cebdda8f90a9e5c5994e1917756d85",
+      "kind": "native_labeled",
+      "reference": "occlusion_native_labels.json",
+      "frames": 1533,
+      "test_labeled_currents": 3066,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 3066,
+      "candidate_missing": 0,
+      "candidate_conflicting": 1,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 2938,
+          "differs_reference": 0,
+          "unavailable": 3,
+          "occluded": 125,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 2846,
+          "differs_reference": 1,
+          "unavailable": 161,
+          "occluded": 58,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "native_oct12/all_records/long_diagnostic_20261010_220835_664781.zip",
+      "dataset_name": "ocr_dataset_20261010_220837_008614.zip",
+      "dataset_sha256": "376947f307245be2e49f8eee109e8b201555eb44e447a67c6858a2130ac7c195",
+      "kind": "native_labeled",
+      "reference": "item_outline_native_labels.json",
+      "frames": 1490,
+      "test_labeled_currents": 2980,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 2980,
+      "candidate_missing": 0,
+      "candidate_conflicting": 1,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 2670,
+          "differs_reference": 1,
+          "unavailable": 6,
+          "occluded": 303,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 2528,
+          "differs_reference": 0,
+          "unavailable": 195,
+          "occluded": 257,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "native_oct12/all_records/long_diagnostic_20261010_224456_007948.zip",
+      "dataset_name": "ocr_dataset_20261010_224456_538482.zip",
+      "dataset_sha256": "582a951a57eed5db06d534cccdfd1b843d7a606d2ba6301327a50daed9775077",
+      "kind": "native_labeled",
+      "reference": "counter_native_224456_labels.json",
+      "frames": 1509,
+      "test_labeled_currents": 3018,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 3017,
+      "candidate_missing": 1,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 2809,
+          "differs_reference": 0,
+          "unavailable": 182,
+          "occluded": 27,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 2956,
+          "differs_reference": 0,
+          "unavailable": 20,
+          "occluded": 42,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "native_oct12/ocr_conflicts_20261010_224456_535478.zip",
+      "dataset_name": "ocr_conflicts_20261010_224456_535478.zip",
+      "dataset_sha256": "29cfd4f3b2fc6206639addeca7679fb38f30be86a7554ad1443b56db30ad04b3",
+      "kind": "native_labeled",
+      "reference": "independent_15_case_native_labels",
+      "frames": 15,
+      "test_labeled_currents": 30,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 30,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 29,
+          "differs_reference": 0,
+          "unavailable": 1,
+          "occluded": 0,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 12,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 18,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "native_oct12/recovered_older/ocr_dataset_20261006_104102_660600.zip",
+      "dataset_name": "ocr_dataset_20261006_104102_660600.zip",
+      "dataset_sha256": "3e5e51ac4235d21e1c3cb49b8e3513cd13b3b10f5d7b9a684a6022724c1f4ee6",
+      "kind": "native_labeled",
+      "reference": "hp_mp_manual_audit.zip:labels_current_manual.csv",
+      "frames": 791,
+      "test_labeled_currents": 1582,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 1574,
+      "candidate_missing": 8,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 1347,
+          "differs_reference": 0,
+          "unavailable": 188,
+          "occluded": 47,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 1526,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 56,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "native_oct12/recovered_older/ocr_dataset_20261008_193758_216715.zip",
+      "dataset_name": "ocr_dataset_20261008_193758_216715.zip",
+      "dataset_sha256": "67631a0509b8d24ae0f504d9508d3541b57d276d72d4ba20039c214fb76e1bb4",
+      "kind": "unlabeled",
+      "reference": null,
+      "frames": 1345,
+      "test_labeled_currents": 0,
+      "training_currents": 0,
+      "unlabeled_currents": 2690,
+      "candidate_correct_available": 0,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 19,
+          "unlabeled_available": 2671
+        },
+        "side": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 2690
+        }
+      }
+    },
+    {
+      "archive": "regression_test/maximum/dataset.zip",
+      "dataset_name": "dataset.zip",
+      "dataset_sha256": "0ea9ef7773b7e82e6645d3af407988eb199b72a8d95b54b29d7d20ce8b0b53b6",
+      "kind": "synthetic_labeled",
+      "reference": "/workspace/scratch/a19a359bfc57/regression_test/maximum/labels.csv",
+      "frames": 34,
+      "test_labeled_currents": 68,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 68,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 19,
+          "differs_reference": 0,
+          "unavailable": 49,
+          "occluded": 0,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 68,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "regression_test/side/synthetic_occlusion.zip",
+      "dataset_name": "synthetic_occlusion.zip",
+      "dataset_sha256": "ab4af7d0b632bd9d66d75991aa38dcfa2d4d6d8955e70baf2d755f022b6eb89f",
+      "kind": "synthetic_labeled",
+      "reference": "/workspace/scratch/a19a359bfc57/regression_test/side/labels_synthetic.csv",
+      "frames": 336,
+      "test_labeled_currents": 672,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 597,
+      "candidate_missing": 75,
+      "candidate_conflicting": 9,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 588,
+          "differs_reference": 0,
+          "unavailable": 84,
+          "occluded": 0,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 381,
+          "differs_reference": 9,
+          "unavailable": 282,
+          "occluded": 0,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "regression_test/source_skew/dataset.zip",
+      "dataset_name": "dataset.zip",
+      "dataset_sha256": "23eb04210d5751f99fc641718d9d8a656432b989870405e1b4c561bdfad79294",
+      "kind": "synthetic_labeled",
+      "reference": "/workspace/scratch/a19a359bfc57/regression_test/source_skew/labels.csv",
+      "frames": 99,
+      "test_labeled_currents": 150,
+      "training_currents": 0,
+      "unlabeled_currents": 48,
+      "candidate_correct_available": 144,
+      "candidate_missing": 0,
+      "candidate_conflicting": 18,
+      "only_wrong_candidates": 6,
+      "sources": {
+        "top": {
+          "correct": 114,
+          "differs_reference": 0,
+          "unavailable": 48,
+          "occluded": 0,
+          "unlabeled_available": 36
+        },
+        "side": {
+          "correct": 126,
+          "differs_reference": 24,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 48
+        }
+      }
+    },
+    {
+      "archive": "regression_test/synthetic/synthetic_occlusion.zip",
+      "dataset_name": "synthetic_occlusion.zip",
+      "dataset_sha256": "fb8558855a0bcdd07992328348dc90af7ceefc9cd77124e185e60fb1d83bd380",
+      "kind": "synthetic_labeled",
+      "reference": "/workspace/scratch/a19a359bfc57/regression_test/synthetic/labels_synthetic.csv",
+      "frames": 468,
+      "test_labeled_currents": 936,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 936,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 585,
+          "differs_reference": 0,
+          "unavailable": 9,
+          "occluded": 342,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 936,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "regression_test/triple_one/dataset.zip",
+      "dataset_name": "dataset.zip",
+      "dataset_sha256": "565fc2d07a4855513e22202ddc718f68e438d9a8fa16a11bf9a11d4266119f42",
+      "kind": "synthetic_labeled",
+      "reference": "/workspace/scratch/a19a359bfc57/regression_test/triple_one/labels.csv",
+      "frames": 510,
+      "test_labeled_currents": 1020,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 1020,
+      "candidate_missing": 0,
+      "candidate_conflicting": 60,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 894,
+          "differs_reference": 0,
+          "unavailable": 21,
+          "occluded": 105,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 894,
+          "differs_reference": 60,
+          "unavailable": 66,
+          "occluded": 0,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "regression_test/variable/synthetic_occlusion.zip",
+      "dataset_name": "synthetic_occlusion.zip",
+      "dataset_sha256": "4075954babd1b4c99f4cc568fd2dabc7e48dc2bab5eb33752c63ed0956b6c7b0",
+      "kind": "synthetic_labeled",
+      "reference": "/workspace/scratch/a19a359bfc57/regression_test/variable/labels_synthetic.csv",
+      "frames": 864,
+      "test_labeled_currents": 1728,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 1728,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 1170,
+          "differs_reference": 0,
+          "unavailable": 162,
+          "occluded": 396,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 1728,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_conflicts_20261005_200739_999161.zip",
+      "dataset_name": "ocr_conflicts_20261005_200739_999161.zip",
+      "dataset_sha256": "deaf1f19efb34c4e60d23c7431b83e671026db9ecaa30717931142c882fd03ab",
+      "kind": "unlabeled",
+      "reference": null,
+      "frames": 5,
+      "test_labeled_currents": 0,
+      "training_currents": 0,
+      "unlabeled_currents": 10,
+      "candidate_correct_available": 0,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 10
+        },
+        "side": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 10
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_conflicts_20261006_074232_892951.zip",
+      "dataset_name": "ocr_conflicts_20261006_074232_892951.zip",
+      "dataset_sha256": "ef391b3352793ad9516b4088c0e29fef5b8b9ac8ab28f4aa5c30441c0b255df2",
+      "kind": "unlabeled",
+      "reference": null,
+      "frames": 2,
+      "test_labeled_currents": 0,
+      "training_currents": 0,
+      "unlabeled_currents": 4,
+      "candidate_correct_available": 0,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 4
+        },
+        "side": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 4
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_conflicts_20261006_091129_181046.zip",
+      "dataset_name": "ocr_conflicts_20261006_091129_181046.zip",
+      "dataset_sha256": "ac920f7c5a15b3298cddfb8522a2a239cd8c10699bbe99b2e0c676e32c24bf38",
+      "kind": "unlabeled",
+      "reference": null,
+      "frames": 3,
+      "test_labeled_currents": 0,
+      "training_currents": 0,
+      "unlabeled_currents": 6,
+      "candidate_correct_available": 0,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 6
+        },
+        "side": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 2,
+          "unlabeled_available": 4
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_conflicts_20261006_104102_654598.zip",
+      "dataset_name": "ocr_conflicts_20261006_104102_654598.zip",
+      "dataset_sha256": "0cfc1a6ad92314866f47352f50d77b198dd58f1e4deb42d38dd8ef39889f2b49",
+      "kind": "unlabeled",
+      "reference": null,
+      "frames": 29,
+      "test_labeled_currents": 0,
+      "training_currents": 0,
+      "unlabeled_currents": 58,
+      "candidate_correct_available": 0,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 8,
+          "occluded": 11,
+          "unlabeled_available": 39
+        },
+        "side": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 21,
+          "unlabeled_available": 37
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_conflicts_20261006_150011_619968.zip",
+      "dataset_name": "ocr_conflicts_20261006_150011_619968.zip",
+      "dataset_sha256": "a8026e1b05643fcfd42e4d3475c4ff3531bd4a402533566cdaacec883970cb76",
+      "kind": "unlabeled",
+      "reference": null,
+      "frames": 19,
+      "test_labeled_currents": 0,
+      "training_currents": 0,
+      "unlabeled_currents": 38,
+      "candidate_correct_available": 0,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 2,
+          "occluded": 3,
+          "unlabeled_available": 33
+        },
+        "side": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 25,
+          "unlabeled_available": 13
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_conflicts_20261009_141735_755278.zip",
+      "dataset_name": "ocr_conflicts_20261009_141735_755278.zip",
+      "dataset_sha256": "b34009e26a257b7d3e3c03e67094ba20cec571e1b18f82b1ba9cf5eec8b1510d",
+      "kind": "unlabeled",
+      "reference": null,
+      "frames": 18,
+      "test_labeled_currents": 0,
+      "training_currents": 0,
+      "unlabeled_currents": 36,
+      "candidate_correct_available": 0,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 36
+        },
+        "side": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 28,
+          "unlabeled_available": 8
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_conflicts_20261009_143216_276079.zip",
+      "dataset_name": "ocr_conflicts_20261009_143216_276079.zip",
+      "dataset_sha256": "b460fc71ef61c005d18926641d812ac0a52c2563db62822eddc44b35ac9f6522",
+      "kind": "unlabeled",
+      "reference": null,
+      "frames": 60,
+      "test_labeled_currents": 0,
+      "training_currents": 0,
+      "unlabeled_currents": 120,
+      "candidate_correct_available": 0,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 120
+        },
+        "side": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 103,
+          "unlabeled_available": 17
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_conflicts_20261010_183914_301908.zip",
+      "dataset_name": "ocr_conflicts_20261010_183914_301908.zip",
+      "dataset_sha256": "e289d45b45a5f6a65a58f93fa077e95820b598c23f39d4e38a92c77f8fde81b1",
+      "kind": "unlabeled",
+      "reference": null,
+      "frames": 23,
+      "test_labeled_currents": 0,
+      "training_currents": 0,
+      "unlabeled_currents": 46,
+      "candidate_correct_available": 0,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 46
+        },
+        "side": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 3,
+          "occluded": 37,
+          "unlabeled_available": 6
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_conflicts_20261010_185504_773746.zip",
+      "dataset_name": "ocr_conflicts_20261010_185504_773746.zip",
+      "dataset_sha256": "ca79c2ab16e15e58ab03c4f2137150aa44ef6772d4fd00df6aaac16a4bb8502f",
+      "kind": "unlabeled",
+      "reference": null,
+      "frames": 60,
+      "test_labeled_currents": 0,
+      "training_currents": 0,
+      "unlabeled_currents": 120,
+      "candidate_correct_available": 0,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 14,
+          "occluded": 0,
+          "unlabeled_available": 106
+        },
+        "side": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 3,
+          "occluded": 102,
+          "unlabeled_available": 15
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_conflicts_20261010_190906_034612.zip",
+      "dataset_name": "ocr_conflicts_20261010_190906_034612.zip",
+      "dataset_sha256": "1da3d8766b80d575d15bb62d16d9988ac429d980aec53e4457eb9baef6cb798d",
+      "kind": "unlabeled",
+      "reference": null,
+      "frames": 19,
+      "test_labeled_currents": 0,
+      "training_currents": 0,
+      "unlabeled_currents": 38,
+      "candidate_correct_available": 0,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 1,
+          "occluded": 0,
+          "unlabeled_available": 37
+        },
+        "side": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 6,
+          "occluded": 26,
+          "unlabeled_available": 6
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_conflicts_20261010_191759_212964.zip",
+      "dataset_name": "ocr_conflicts_20261010_191759_212964.zip",
+      "dataset_sha256": "24e51a7006a1d03b7eb7009f74d841bc0211caa2546b330d1eb8f1b9fb433cd1",
+      "kind": "unlabeled",
+      "reference": null,
+      "frames": 24,
+      "test_labeled_currents": 0,
+      "training_currents": 0,
+      "unlabeled_currents": 48,
+      "candidate_correct_available": 0,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 48
+        },
+        "side": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 1,
+          "occluded": 30,
+          "unlabeled_available": 17
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_dataset_20261006_150011_632966.zip",
+      "dataset_name": "ocr_dataset_20261006_150011_632966.zip",
+      "dataset_sha256": "2abb717fb727084e2d61d50c35f5c80360432ce7e2d010a359f16da3a4c55b4a",
+      "kind": "unlabeled",
+      "reference": null,
+      "frames": 708,
+      "test_labeled_currents": 0,
+      "training_currents": 0,
+      "unlabeled_currents": 1416,
+      "candidate_correct_available": 0,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 38,
+          "occluded": 133,
+          "unlabeled_available": 1245
+        },
+        "side": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 51,
+          "unlabeled_available": 1365
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_dataset_20261006_203712_874309.zip",
+      "dataset_name": "ocr_dataset_20261006_203712_874309.zip",
+      "dataset_sha256": "e87d6eac34d66916405a060e1cd6e40c4f67fad05fdc8260ff00f4eee00f712a",
+      "kind": "native_labeled",
+      "reference": "hp_mp_colored_manual_audit.zip:labels_current_manual.csv",
+      "frames": 264,
+      "test_labeled_currents": 528,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 528,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 311,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 217,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 528,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_dataset_20261008_185859_003221.zip",
+      "dataset_name": "ocr_dataset_20261008_185859_003221.zip",
+      "dataset_sha256": "46dc123ecb15302285e0e8d780bf0535f3f82f06c3d34c25e424299a9b2e4f75",
+      "kind": "native_labeled",
+      "reference": "hp_mp_latest_manual_audit.zip:audit_latest/labels_current_manual.csv",
+      "frames": 266,
+      "test_labeled_currents": 532,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 506,
+      "candidate_missing": 26,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 452,
+          "differs_reference": 0,
+          "unavailable": 28,
+          "occluded": 52,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 415,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 117,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_dataset_20261008_192013_656822.zip",
+      "dataset_name": "ocr_dataset_20261008_192013_656822.zip",
+      "dataset_sha256": "7edce7551d148fc35511463f49bf18a749fbeb739ded3c337941654d5030bfe4",
+      "kind": "native_labeled",
+      "reference": "hp_mp_normal_manual_audit.zip:audit_normal/labels_current_manual.csv",
+      "frames": 1315,
+      "test_labeled_currents": 2630,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 2630,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 2579,
+          "differs_reference": 0,
+          "unavailable": 24,
+          "occluded": 27,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 2612,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 18,
+          "unlabeled_available": 0
+        }
+      }
+    }
+  ],
+  "skipped": [
+    {
+      "archive": "native_oct12/all_records/ocr_dataset_20261010_214426_197073.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "native_oct12/all_records/ocr_dataset_20261010_220837_008614.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "native_oct12/all_records/ocr_dataset_20261010_224456_538482.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "regression_test/digit_transition/dataset.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "regression_test/dynamic/dataset.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "regression_test/interruption/dataset.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "source_skew_test/dataset.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "triple_one_test/dataset.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "upload/long_diagnostic_20261010_200322_320047.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "upload/ocr_dataset_20261006_104102_660600.zip",
+      "reason": "File is not a zip file"
+    },
+    {
+      "archive": "upload/ocr_dataset_20261008_193758_216715.zip",
+      "reason": "File is not a zip file"
+    }
+  ]
+}
