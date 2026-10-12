@@ -1,5 +1,30 @@
 # Experimental native font counters
 
+## Hybrid fallback experiment
+
+```bash
+git pull --ff-only
+/c/_MS/GIT/TeoBot_OCR_venv/Scripts/python.exe -X utf8 tools/obs_monitor/run_template_regression.py --root . --output template_regression_hybrid --ocr-fallback
+```
+
+Offline; requires the existing Tesseract installation, no game/OBS/keys. Strict
+template matching runs first. A rejected template candidate gets a resident
+Tesseract retry using the existing validated top/side OCR routines. Occlusion
+filtering remains in force. A template-accepted candidate is not overridden by
+OCR. There is no source arbitration, temporal confirmation or maximum update.
+
+Linux reference run: 26092/26092 labeled test currents have at least one correct
+candidate, with zero missing or wrong-only candidate sets. This does NOT prove
+the final selected value: 184 source conflicts remain, versus 96 for templates
+alone. Fallback can also return an incorrect secondary candidate. Numeric
+fallback counts measure availability, not independent correctness. See
+template_hybrid_results_v1.json. Existing live monitor remains unchanged.
+
+Native/unlabeled archives no longer inherit unrelated labels*.csv files from
+their parent directory. Automatic adjacent CSV discovery is restricted to the
+synthetic dataset.zip/synthetic_occlusion.zip convention. Native labels must
+come from the explicit hash-bound references or mapped manual-audit archive.
+
 ## Complete available-archive regression
 
 ```bash

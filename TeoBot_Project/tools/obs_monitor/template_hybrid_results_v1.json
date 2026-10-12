@@ -1,0 +1,1131 @@
+{
+  "datasets": [
+    {
+      "archive": "digit_transition_test/dataset.zip",
+      "dataset_name": "dataset.zip",
+      "dataset_sha256": "860ede83cda334b617834d7c2eb536fe1e33698408aec949f131f47719019ccf",
+      "kind": "synthetic_labeled",
+      "reference": "/workspace/scratch/a19a359bfc57/digit_transition_test/labels.csv",
+      "frames": 99,
+      "test_labeled_currents": 198,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 198,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 118,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 80,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 134,
+          "differs_reference": 0,
+          "unavailable": 64,
+          "occluded": 0,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "dynamic_transition_test/dataset.zip",
+      "dataset_name": "dataset.zip",
+      "dataset_sha256": "b64c4fe1ca440377a219dc82e569ce8d97fb1d0a8fdcc01ecab669a7ba413928",
+      "kind": "synthetic_labeled",
+      "reference": "/workspace/scratch/a19a359bfc57/dynamic_transition_test/labels.csv",
+      "frames": 183,
+      "test_labeled_currents": 366,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 366,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 236,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 130,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 226,
+          "differs_reference": 0,
+          "unavailable": 140,
+          "occluded": 0,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "hybrid_template_results/_bundle_inputs/hp_mp_interruption_test/dataset.zip",
+      "dataset_name": "dataset.zip",
+      "dataset_sha256": "c6a2474a9b46d9e149151c95c1d0f3a82b5f01d595886af53bede5038b0e7bbd",
+      "kind": "synthetic_labeled",
+      "reference": "/workspace/scratch/a19a359bfc57/hybrid_template_results/_bundle_inputs/hp_mp_interruption_test/labels.csv",
+      "frames": 16,
+      "test_labeled_currents": 26,
+      "training_currents": 0,
+      "unlabeled_currents": 6,
+      "candidate_correct_available": 26,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 26,
+          "differs_reference": 0,
+          "unavailable": 6,
+          "occluded": 0,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 26,
+          "differs_reference": 0,
+          "unavailable": 6,
+          "occluded": 0,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "hybrid_template_results/_bundle_inputs/hp_mp_max_transition_test/dataset.zip",
+      "dataset_name": "dataset.zip",
+      "dataset_sha256": "0ea9ef7773b7e82e6645d3af407988eb199b72a8d95b54b29d7d20ce8b0b53b6",
+      "kind": "synthetic_labeled",
+      "reference": "/workspace/scratch/a19a359bfc57/hybrid_template_results/_bundle_inputs/hp_mp_max_transition_test/labels.csv",
+      "frames": 34,
+      "test_labeled_currents": 68,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 68,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 68,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 68,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "hybrid_template_results/_bundle_inputs/hp_mp_regression_test/side/synthetic_occlusion.zip",
+      "dataset_name": "synthetic_occlusion.zip",
+      "dataset_sha256": "ab4af7d0b632bd9d66d75991aa38dcfa2d4d6d8955e70baf2d755f022b6eb89f",
+      "kind": "synthetic_labeled",
+      "reference": "/workspace/scratch/a19a359bfc57/hybrid_template_results/_bundle_inputs/hp_mp_regression_test/side/labels_synthetic.csv",
+      "frames": 336,
+      "test_labeled_currents": 672,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 672,
+      "candidate_missing": 0,
+      "candidate_conflicting": 54,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 672,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 441,
+          "differs_reference": 54,
+          "unavailable": 177,
+          "occluded": 0,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "hybrid_template_results/_bundle_inputs/hp_mp_regression_test/synthetic/synthetic_occlusion.zip",
+      "dataset_name": "synthetic_occlusion.zip",
+      "dataset_sha256": "fb8558855a0bcdd07992328348dc90af7ceefc9cd77124e185e60fb1d83bd380",
+      "kind": "synthetic_labeled",
+      "reference": "/workspace/scratch/a19a359bfc57/hybrid_template_results/_bundle_inputs/hp_mp_regression_test/synthetic/labels_synthetic.csv",
+      "frames": 468,
+      "test_labeled_currents": 936,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 936,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 585,
+          "differs_reference": 0,
+          "unavailable": 9,
+          "occluded": 342,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 936,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "hybrid_template_results/_bundle_inputs/hp_mp_regression_test/variable/synthetic_occlusion.zip",
+      "dataset_name": "synthetic_occlusion.zip",
+      "dataset_sha256": "4075954babd1b4c99f4cc568fd2dabc7e48dc2bab5eb33752c63ed0956b6c7b0",
+      "kind": "synthetic_labeled",
+      "reference": "/workspace/scratch/a19a359bfc57/hybrid_template_results/_bundle_inputs/hp_mp_regression_test/variable/labels_synthetic.csv",
+      "frames": 864,
+      "test_labeled_currents": 1728,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 1728,
+      "candidate_missing": 0,
+      "candidate_conflicting": 6,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 1248,
+          "differs_reference": 6,
+          "unavailable": 78,
+          "occluded": 396,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 1728,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "hybrid_template_results/_bundle_inputs/hp_mp_regression_test_v2/source_skew/dataset.zip",
+      "dataset_name": "dataset.zip",
+      "dataset_sha256": "23eb04210d5751f99fc641718d9d8a656432b989870405e1b4c561bdfad79294",
+      "kind": "synthetic_labeled",
+      "reference": "/workspace/scratch/a19a359bfc57/hybrid_template_results/_bundle_inputs/hp_mp_regression_test_v2/source_skew/labels.csv",
+      "frames": 99,
+      "test_labeled_currents": 150,
+      "training_currents": 0,
+      "unlabeled_currents": 48,
+      "candidate_correct_available": 150,
+      "candidate_missing": 0,
+      "candidate_conflicting": 24,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 150,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 48
+        },
+        "side": {
+          "correct": 126,
+          "differs_reference": 24,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 48
+        }
+      }
+    },
+    {
+      "archive": "hybrid_template_results/_bundle_inputs/hp_mp_regression_test_v2/triple_one/dataset.zip",
+      "dataset_name": "dataset.zip",
+      "dataset_sha256": "565fc2d07a4855513e22202ddc718f68e438d9a8fa16a11bf9a11d4266119f42",
+      "kind": "synthetic_labeled",
+      "reference": "/workspace/scratch/a19a359bfc57/hybrid_template_results/_bundle_inputs/hp_mp_regression_test_v2/triple_one/labels.csv",
+      "frames": 510,
+      "test_labeled_currents": 1020,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 1020,
+      "candidate_missing": 0,
+      "candidate_conflicting": 69,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 894,
+          "differs_reference": 3,
+          "unavailable": 18,
+          "occluded": 105,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 894,
+          "differs_reference": 66,
+          "unavailable": 60,
+          "occluded": 0,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "long_oct10/ocr_dataset_20261010_200323_181063.zip",
+      "dataset_name": "ocr_dataset_20261010_200323_181063.zip",
+      "dataset_sha256": "8890e40875954664709ad6a6e675d4430f9960f6b394bc77587a1d56148b36df",
+      "kind": "native_labeled",
+      "reference": "long_native_labels.json",
+      "frames": 5281,
+      "test_labeled_currents": 6562,
+      "training_currents": 3999,
+      "unlabeled_currents": 1,
+      "candidate_correct_available": 6562,
+      "candidate_missing": 0,
+      "candidate_conflicting": 7,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 10131,
+          "differs_reference": 0,
+          "unavailable": 35,
+          "occluded": 395,
+          "unlabeled_available": 1
+        },
+        "side": {
+          "correct": 10259,
+          "differs_reference": 24,
+          "unavailable": 73,
+          "occluded": 205,
+          "unlabeled_available": 1
+        }
+      }
+    },
+    {
+      "archive": "native_oct12/all_records/long_diagnostic_20261010_214424_947506.zip",
+      "dataset_name": "ocr_dataset_20261010_214426_197073.zip",
+      "dataset_sha256": "fb0f9fa9658c58ac9533f0a2a9ed2d22a0cebdda8f90a9e5c5994e1917756d85",
+      "kind": "native_labeled",
+      "reference": "occlusion_native_labels.json",
+      "frames": 1533,
+      "test_labeled_currents": 3066,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 3066,
+      "candidate_missing": 0,
+      "candidate_conflicting": 9,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 2941,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 125,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 2855,
+          "differs_reference": 9,
+          "unavailable": 144,
+          "occluded": 58,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "native_oct12/all_records/long_diagnostic_20261010_220835_664781.zip",
+      "dataset_name": "ocr_dataset_20261010_220837_008614.zip",
+      "dataset_sha256": "376947f307245be2e49f8eee109e8b201555eb44e447a67c6858a2130ac7c195",
+      "kind": "native_labeled",
+      "reference": "item_outline_native_labels.json",
+      "frames": 1490,
+      "test_labeled_currents": 2980,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 2980,
+      "candidate_missing": 0,
+      "candidate_conflicting": 15,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 2675,
+          "differs_reference": 1,
+          "unavailable": 1,
+          "occluded": 303,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 2528,
+          "differs_reference": 14,
+          "unavailable": 181,
+          "occluded": 257,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "native_oct12/all_records/long_diagnostic_20261010_224456_007948.zip",
+      "dataset_name": "ocr_dataset_20261010_224456_538482.zip",
+      "dataset_sha256": "582a951a57eed5db06d534cccdfd1b843d7a606d2ba6301327a50daed9775077",
+      "kind": "native_labeled",
+      "reference": "counter_native_224456_labels.json",
+      "frames": 1509,
+      "test_labeled_currents": 3018,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 3018,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 2990,
+          "differs_reference": 0,
+          "unavailable": 1,
+          "occluded": 27,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 2956,
+          "differs_reference": 0,
+          "unavailable": 20,
+          "occluded": 42,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "native_oct12/ocr_conflicts_20261010_224456_535478.zip",
+      "dataset_name": "ocr_conflicts_20261010_224456_535478.zip",
+      "dataset_sha256": "29cfd4f3b2fc6206639addeca7679fb38f30be86a7554ad1443b56db30ad04b3",
+      "kind": "native_labeled",
+      "reference": "independent_15_case_native_labels",
+      "frames": 15,
+      "test_labeled_currents": 30,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 30,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 30,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 12,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 18,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "native_oct12/recovered_older/ocr_dataset_20261006_104102_660600.zip",
+      "dataset_name": "ocr_dataset_20261006_104102_660600.zip",
+      "dataset_sha256": "3e5e51ac4235d21e1c3cb49b8e3513cd13b3b10f5d7b9a684a6022724c1f4ee6",
+      "kind": "native_labeled",
+      "reference": "hp_mp_manual_audit.zip:labels_current_manual.csv",
+      "frames": 791,
+      "test_labeled_currents": 1582,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 1582,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 1532,
+          "differs_reference": 0,
+          "unavailable": 3,
+          "occluded": 47,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 1526,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 56,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "native_oct12/recovered_older/ocr_dataset_20261008_193758_216715.zip",
+      "dataset_name": "ocr_dataset_20261008_193758_216715.zip",
+      "dataset_sha256": "67631a0509b8d24ae0f504d9508d3541b57d276d72d4ba20039c214fb76e1bb4",
+      "kind": "unlabeled",
+      "reference": null,
+      "frames": 1345,
+      "test_labeled_currents": 0,
+      "training_currents": 0,
+      "unlabeled_currents": 2690,
+      "candidate_correct_available": 0,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 19,
+          "unlabeled_available": 2671
+        },
+        "side": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 2690
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_conflicts_20261005_200739_999161.zip",
+      "dataset_name": "ocr_conflicts_20261005_200739_999161.zip",
+      "dataset_sha256": "deaf1f19efb34c4e60d23c7431b83e671026db9ecaa30717931142c882fd03ab",
+      "kind": "unlabeled",
+      "reference": null,
+      "frames": 5,
+      "test_labeled_currents": 0,
+      "training_currents": 0,
+      "unlabeled_currents": 10,
+      "candidate_correct_available": 0,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 10
+        },
+        "side": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 10
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_conflicts_20261006_074232_892951.zip",
+      "dataset_name": "ocr_conflicts_20261006_074232_892951.zip",
+      "dataset_sha256": "ef391b3352793ad9516b4088c0e29fef5b8b9ac8ab28f4aa5c30441c0b255df2",
+      "kind": "unlabeled",
+      "reference": null,
+      "frames": 2,
+      "test_labeled_currents": 0,
+      "training_currents": 0,
+      "unlabeled_currents": 4,
+      "candidate_correct_available": 0,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 4
+        },
+        "side": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 4
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_conflicts_20261006_091129_181046.zip",
+      "dataset_name": "ocr_conflicts_20261006_091129_181046.zip",
+      "dataset_sha256": "ac920f7c5a15b3298cddfb8522a2a239cd8c10699bbe99b2e0c676e32c24bf38",
+      "kind": "unlabeled",
+      "reference": null,
+      "frames": 3,
+      "test_labeled_currents": 0,
+      "training_currents": 0,
+      "unlabeled_currents": 6,
+      "candidate_correct_available": 0,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 6
+        },
+        "side": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 2,
+          "unlabeled_available": 4
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_conflicts_20261006_104102_654598.zip",
+      "dataset_name": "ocr_conflicts_20261006_104102_654598.zip",
+      "dataset_sha256": "0cfc1a6ad92314866f47352f50d77b198dd58f1e4deb42d38dd8ef39889f2b49",
+      "kind": "unlabeled",
+      "reference": null,
+      "frames": 29,
+      "test_labeled_currents": 0,
+      "training_currents": 0,
+      "unlabeled_currents": 58,
+      "candidate_correct_available": 0,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 1,
+          "occluded": 11,
+          "unlabeled_available": 46
+        },
+        "side": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 21,
+          "unlabeled_available": 37
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_conflicts_20261006_150011_619968.zip",
+      "dataset_name": "ocr_conflicts_20261006_150011_619968.zip",
+      "dataset_sha256": "a8026e1b05643fcfd42e4d3475c4ff3531bd4a402533566cdaacec883970cb76",
+      "kind": "unlabeled",
+      "reference": null,
+      "frames": 19,
+      "test_labeled_currents": 0,
+      "training_currents": 0,
+      "unlabeled_currents": 38,
+      "candidate_correct_available": 0,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 3,
+          "unlabeled_available": 35
+        },
+        "side": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 25,
+          "unlabeled_available": 13
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_conflicts_20261009_141735_755278.zip",
+      "dataset_name": "ocr_conflicts_20261009_141735_755278.zip",
+      "dataset_sha256": "b34009e26a257b7d3e3c03e67094ba20cec571e1b18f82b1ba9cf5eec8b1510d",
+      "kind": "unlabeled",
+      "reference": null,
+      "frames": 18,
+      "test_labeled_currents": 0,
+      "training_currents": 0,
+      "unlabeled_currents": 36,
+      "candidate_correct_available": 0,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 36
+        },
+        "side": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 28,
+          "unlabeled_available": 8
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_conflicts_20261009_143216_276079.zip",
+      "dataset_name": "ocr_conflicts_20261009_143216_276079.zip",
+      "dataset_sha256": "b460fc71ef61c005d18926641d812ac0a52c2563db62822eddc44b35ac9f6522",
+      "kind": "unlabeled",
+      "reference": null,
+      "frames": 60,
+      "test_labeled_currents": 0,
+      "training_currents": 0,
+      "unlabeled_currents": 120,
+      "candidate_correct_available": 0,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 120
+        },
+        "side": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 103,
+          "unlabeled_available": 17
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_conflicts_20261010_183914_301908.zip",
+      "dataset_name": "ocr_conflicts_20261010_183914_301908.zip",
+      "dataset_sha256": "e289d45b45a5f6a65a58f93fa077e95820b598c23f39d4e38a92c77f8fde81b1",
+      "kind": "unlabeled",
+      "reference": null,
+      "frames": 23,
+      "test_labeled_currents": 0,
+      "training_currents": 0,
+      "unlabeled_currents": 46,
+      "candidate_correct_available": 0,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 46
+        },
+        "side": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 2,
+          "occluded": 37,
+          "unlabeled_available": 7
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_conflicts_20261010_185504_773746.zip",
+      "dataset_name": "ocr_conflicts_20261010_185504_773746.zip",
+      "dataset_sha256": "ca79c2ab16e15e58ab03c4f2137150aa44ef6772d4fd00df6aaac16a4bb8502f",
+      "kind": "unlabeled",
+      "reference": null,
+      "frames": 60,
+      "test_labeled_currents": 0,
+      "training_currents": 0,
+      "unlabeled_currents": 120,
+      "candidate_correct_available": 0,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 120
+        },
+        "side": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 2,
+          "occluded": 102,
+          "unlabeled_available": 16
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_conflicts_20261010_190906_034612.zip",
+      "dataset_name": "ocr_conflicts_20261010_190906_034612.zip",
+      "dataset_sha256": "1da3d8766b80d575d15bb62d16d9988ac429d980aec53e4457eb9baef6cb798d",
+      "kind": "unlabeled",
+      "reference": null,
+      "frames": 19,
+      "test_labeled_currents": 0,
+      "training_currents": 0,
+      "unlabeled_currents": 38,
+      "candidate_correct_available": 0,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 1,
+          "occluded": 0,
+          "unlabeled_available": 37
+        },
+        "side": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 5,
+          "occluded": 26,
+          "unlabeled_available": 7
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_conflicts_20261010_191759_212964.zip",
+      "dataset_name": "ocr_conflicts_20261010_191759_212964.zip",
+      "dataset_sha256": "24e51a7006a1d03b7eb7009f74d841bc0211caa2546b330d1eb8f1b9fb433cd1",
+      "kind": "unlabeled",
+      "reference": null,
+      "frames": 24,
+      "test_labeled_currents": 0,
+      "training_currents": 0,
+      "unlabeled_currents": 48,
+      "candidate_correct_available": 0,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 48
+        },
+        "side": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 1,
+          "occluded": 30,
+          "unlabeled_available": 17
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_dataset_20261006_150011_632966.zip",
+      "dataset_name": "ocr_dataset_20261006_150011_632966.zip",
+      "dataset_sha256": "2abb717fb727084e2d61d50c35f5c80360432ce7e2d010a359f16da3a4c55b4a",
+      "kind": "unlabeled",
+      "reference": null,
+      "frames": 708,
+      "test_labeled_currents": 0,
+      "training_currents": 0,
+      "unlabeled_currents": 1416,
+      "candidate_correct_available": 0,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 6,
+          "occluded": 133,
+          "unlabeled_available": 1277
+        },
+        "side": {
+          "correct": 0,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 51,
+          "unlabeled_available": 1365
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_dataset_20261006_203712_874309.zip",
+      "dataset_name": "ocr_dataset_20261006_203712_874309.zip",
+      "dataset_sha256": "e87d6eac34d66916405a060e1cd6e40c4f67fad05fdc8260ff00f4eee00f712a",
+      "kind": "native_labeled",
+      "reference": "hp_mp_colored_manual_audit.zip:labels_current_manual.csv",
+      "frames": 264,
+      "test_labeled_currents": 528,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 528,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 311,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 217,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 528,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 0,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_dataset_20261008_185859_003221.zip",
+      "dataset_name": "ocr_dataset_20261008_185859_003221.zip",
+      "dataset_sha256": "46dc123ecb15302285e0e8d780bf0535f3f82f06c3d34c25e424299a9b2e4f75",
+      "kind": "native_labeled",
+      "reference": "hp_mp_latest_manual_audit.zip:audit_latest/labels_current_manual.csv",
+      "frames": 266,
+      "test_labeled_currents": 532,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 532,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 480,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 52,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 415,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 117,
+          "unlabeled_available": 0
+        }
+      }
+    },
+    {
+      "archive": "upload/ocr_dataset_20261008_192013_656822.zip",
+      "dataset_name": "ocr_dataset_20261008_192013_656822.zip",
+      "dataset_sha256": "7edce7551d148fc35511463f49bf18a749fbeb739ded3c337941654d5030bfe4",
+      "kind": "native_labeled",
+      "reference": "hp_mp_normal_manual_audit.zip:audit_normal/labels_current_manual.csv",
+      "frames": 1315,
+      "test_labeled_currents": 2630,
+      "training_currents": 0,
+      "unlabeled_currents": 0,
+      "candidate_correct_available": 2630,
+      "candidate_missing": 0,
+      "candidate_conflicting": 0,
+      "only_wrong_candidates": 0,
+      "sources": {
+        "top": {
+          "correct": 2595,
+          "differs_reference": 0,
+          "unavailable": 8,
+          "occluded": 27,
+          "unlabeled_available": 0
+        },
+        "side": {
+          "correct": 2612,
+          "differs_reference": 0,
+          "unavailable": 0,
+          "occluded": 18,
+          "unlabeled_available": 0
+        }
+      }
+    }
+  ],
+  "skipped": [
+    {
+      "archive": "hybrid_template_results/_bundle_inputs/hp_mp_digit_transition_test/digit_transition_test/dataset.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "hybrid_template_results/_bundle_inputs/hp_mp_dynamic_transition_test/dataset.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "hybrid_template_results/_bundle_inputs/hp_mp_regression_test/dynamic/dataset.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "hybrid_template_results/_bundle_inputs/hp_mp_regression_test/interruption/dataset.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "hybrid_template_results/_bundle_inputs/hp_mp_regression_test/maximum/dataset.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "hybrid_template_results/_bundle_inputs/hp_mp_regression_test_v2/digit_transition/dataset.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "hybrid_template_results/_bundle_inputs/hp_mp_regression_test_v2/dynamic/dataset.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "hybrid_template_results/_bundle_inputs/hp_mp_regression_test_v2/interruption/dataset.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "hybrid_template_results/_bundle_inputs/hp_mp_regression_test_v2/maximum/dataset.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "hybrid_template_results/_bundle_inputs/hp_mp_regression_test_v2/side/synthetic_occlusion.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "hybrid_template_results/_bundle_inputs/hp_mp_regression_test_v2/synthetic/synthetic_occlusion.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "hybrid_template_results/_bundle_inputs/hp_mp_regression_test_v2/variable/synthetic_occlusion.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "hybrid_template_results/_bundle_inputs/hp_mp_side_synthetic_test/synthetic_occlusion.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "hybrid_template_results/_bundle_inputs/hp_mp_source_skew_test/dataset.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "hybrid_template_results/_bundle_inputs/hp_mp_synthetic_test/synthetic_occlusion.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "hybrid_template_results/_bundle_inputs/hp_mp_top_variable_test/synthetic_occlusion.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "hybrid_template_results/_bundle_inputs/hp_mp_triple_one_test/triple_one_test/dataset.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "interruption_test/dataset.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "native_oct12/all_records/ocr_dataset_20261010_214426_197073.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "native_oct12/all_records/ocr_dataset_20261010_220837_008614.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "native_oct12/all_records/ocr_dataset_20261010_224456_538482.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "regression_test/digit_transition/dataset.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "regression_test/dynamic/dataset.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "regression_test/interruption/dataset.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "regression_test/maximum/dataset.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "regression_test/side/synthetic_occlusion.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "regression_test/source_skew/dataset.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "regression_test/synthetic/synthetic_occlusion.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "regression_test/triple_one/dataset.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "regression_test/variable/synthetic_occlusion.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "source_skew_test/dataset.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "triple_one_test/dataset.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "upload/long_diagnostic_20261010_200322_320047.zip",
+      "reason": "duplicate_dataset_hash"
+    },
+    {
+      "archive": "upload/ocr_dataset_20261006_104102_660600.zip",
+      "reason": "File is not a zip file"
+    },
+    {
+      "archive": "upload/ocr_dataset_20261008_193758_216715.zip",
+      "reason": "File is not a zip file"
+    }
+  ],
+  "model_sha256": "60905fc4eda69395778a52697f243b90856480984adf582e127e8fe4f2ee57cb",
+  "training_currents": 3999,
+  "test_labeled_currents": 26092,
+  "unlabeled_currents": 4685,
+  "correct_candidate_available": 26092,
+  "missing_candidates": 0,
+  "only_wrong_candidates": 0,
+  "conflicting_candidates": 184,
+  "unique_test_pixel_pairs": 3270,
+  "test_pixel_pairs_also_in_training": 11,
+  "median_counter_ms": 0.5655009999827598,
+  "note": "Raw CURRENT candidates only, not production selection/confirmation/maxima/actions. Training separated from test coverage. Synthetic source differences may be intentional skew. Unlabeled archives have no accuracy verdict; repeated pixel pairs reported.",
+  "mode": "template_then_ocr",
+  "hybrid_counts": {
+    "template_accepted": 63756,
+    "fallback_attempts": 2188,
+    "occluded": 0,
+    "fallback_numeric_results": 1146
+  },
+  "fully_labeled_test_passed": true,
+  "production_changed": false,
+  "frames_processed": 17388,
+  "unique_archives": 31,
+  "qualification": "Correct candidate available from at least one source; not a test of production arbitration/confirmation. 184 conflicting source pairs remain. Numeric OCR fallback results are not individually guaranteed accurate. Unknown labels excluded."
+}

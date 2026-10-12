@@ -1,5 +1,5 @@
 import unittest
-from run_template_regression import candidate_status,csv_labels,current,bundle_inputs
+from run_template_regression import candidate_status,csv_labels,current,bundle_inputs,synthetic_label_file
 import tempfile,zipfile
 from pathlib import Path
 
@@ -26,6 +26,12 @@ class Tests(unittest.TestCase):
             target=root/'out/hp_mp_test/suite'
             self.assertEqual((target/'dataset.zip').read_bytes(),b'inner bytes')
             self.assertEqual((target/'labels.csv').read_text(),'case,hp_current\na,1\n')
+
+    def test_unrelated_root_csv_does_not_label_native_archive(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);(root/'labels_current_manual.csv').write_text('case,hp_current\na,1\n')
+            self.assertIsNone(synthetic_label_file(root/'ocr_conflicts_old.zip'))
+            self.assertEqual(synthetic_label_file(root/'dataset.zip'),root/'labels_current_manual.csv')
 
     def test_zero_is_a_real_label(self):
         self.assertEqual(current('0'),0);self.assertIsNone(current(''))

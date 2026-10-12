@@ -3,7 +3,7 @@
 Current candidates only; no production arbitration/maxima/actions. Wrong source
 candidates can reflect occlusion or intentional synthetic source skew.
 """
-import argparse,csv,hashlib,io,json,tempfile,zipfile,time
+import argparse,csv,hashlib,io,json,tempfile,zipfile,time,os
 from pathlib import Path
 import cv2
 from template_counter import TemplateCounter
@@ -47,8 +47,19 @@ def bundle_inputs(root,destination):
                     if lp.parent==path.parent and lp.name.startswith('labels') and lp.suffix=='.csv':(target/lp.name).write_bytes(archive.read(label))
 
 
+def synthetic_label_file(archive):
+    if archive.name not in ('dataset.zip','synthetic_occlusion.zip'):return None
+    files=sorted(archive.parent.glob('labels*.csv'))
+    return files[0] if files else None
+
+
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--root',type=Path,default=Path('.'));p.add_argument('--output',type=Path,default=Path('template_regression'));a=p.parse_args();a.root=a.root.resolve();a.output.mkdir(parents=True,exist_ok=True);folder=Path(__file__).resolve().parent;model=json.loads((folder/'counter_templates_v1.json').read_text());reader=TemplateCounter(model);cv2.setNumThreads(1)
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--root',type=Path,default=Path('.'));p.add_argument('--output',type=Path,default=Path('template_regression'));p.add_argument('--ocr-fallback',action='store_true');p.add_argument('--directory',default=r'C:\Program Files\Tesseract-OCR' if os.name=='nt' else '/usr/share/tesseract-ocr/5');a=p.parse_args();a.root=a.root.resolve();a.output.mkdir(parents=True,exist_ok=True);folder=Path(__file__).resolve().parent;model=json.loads((folder/'counter_templates_v1.json').read_text());reader=TemplateCounter(model);cv2.setNumThreads(1)
+    engine=None
+    if a.ocr_fallback:
+        from hybrid_counter import HybridCounter
+        from test_obs_tesseract import Engine
+        os.environ.setdefault('OMP_THREAD_LIMIT','2');engine=Engine(a.directory);reader=HybridCounter(reader,engine)
     refs={}
     for name in ['long_native_labels.json','occlusion_native_labels.json','item_outline_native_labels.json','counter_native_224456_labels.json']:
         path=folder/name
@@ -76,9 +87,9 @@ def main():
                 elif name=='ocr_conflicts_20261010_224456_535478.zip':
                     expected=[(215,120)]*4+[(111,75)]*3+[(111,49),(101,58)]+[(103,61)]*5+[(103,64)]
                     truth={f'case_{i:03d}':dict(zip(('hp_current','mp_current'),v)) for i,v in enumerate(expected)};ref_name='independent_15_case_native_labels';kind='native_labeled'
-                else:
-                    label_files=sorted(archive.parent.glob('labels*.csv'))
-                    if label_files:truth=csv_labels(label_files[0].read_text(encoding='utf-8-sig'));ref_name=str(label_files[0]);kind='synthetic_labeled'
+                elif name in ('dataset.zip','synthetic_occlusion.zip'):
+                    label_file=synthetic_label_file(archive)
+                    if label_file:truth=csv_labels(label_file.read_text(encoding='utf-8-sig'));ref_name=str(label_file);kind='synthetic_labeled'
                 report={'archive':str(archive),'dataset_name':name,'dataset_sha256':digest,'kind':kind,'reference':ref_name,'frames':0,'test_labeled_currents':0,'training_currents':0,'unlabeled_currents':0,'candidate_correct_available':0,'candidate_missing':0,'candidate_conflicting':0,'only_wrong_candidates':0,'sources':{s:{'correct':0,'differs_reference':0,'unavailable':0,'occluded':0,'unlabeled_available':0} for s in ('top','side')},'examples':[]}
                 print('Test:',name,kind,flush=True)
                 with tempfile.TemporaryDirectory() as tmp:
@@ -97,7 +108,7 @@ def main():
                                 if source_hash and label_source==s+'_original' and hashlib.sha256(path.read_bytes()).hexdigest()!=source_hash:raise ValueError('Manual crop hash mismatch '+str(path))
                                 if not valid_crop(crop,s,r):outs[s]={'current':None,'reason':'occlusion_filter'};key='occluded'
                                 else:
-                                    start=time.perf_counter();out=reader.read(crop,s);timings.append((time.perf_counter()-start)*1000);outs[s]=out;v=out['current'];key='unavailable' if v is None else 'unlabeled_available' if expected is None else 'correct' if v==expected else 'differs_reference'
+                                    start=time.perf_counter();out=reader.read(crop,s,r) if a.ocr_fallback else reader.read(crop,s);timings.append((time.perf_counter()-start)*1000);outs[s]=out;v=out['current'];key='unavailable' if v is None else 'unlabeled_available' if expected is None else 'correct' if v==expected else 'differs_reference'
                                 report['sources'][s][key]+=1
                                 if key=='differs_reference' and len(report['examples'])<20:report['examples'].append({'case':case.name,'resource':r,'source':s,'expected':expected,'actual':outs[s]})
                             signature=hashlib.sha256(b''.join(pixels)).hexdigest()
@@ -109,7 +120,10 @@ def main():
                 seen.add(digest)
                 reports.append(report);print(json.dumps({k:report[k] for k in ['frames','test_labeled_currents','candidate_correct_available','candidate_missing','candidate_conflicting','only_wrong_candidates']}),flush=True)
             except (zipfile.BadZipFile,ValueError,OSError,KeyError) as e:skipped.append({'archive':str(archive),'reason':str(e)})
+    if engine is not None:engine.tess.close()
     timings.sort();summary={'datasets':reports,'skipped':skipped,'model_sha256':hashlib.sha256((folder/'counter_templates_v1.json').read_bytes()).hexdigest(),'training_currents':sum(r['training_currents'] for r in reports),'test_labeled_currents':sum(r['test_labeled_currents'] for r in reports),'unlabeled_currents':sum(r['unlabeled_currents'] for r in reports),'correct_candidate_available':sum(r['candidate_correct_available'] for r in reports),'missing_candidates':sum(r['candidate_missing'] for r in reports),'only_wrong_candidates':sum(r['only_wrong_candidates'] for r in reports),'conflicting_candidates':sum(r['candidate_conflicting'] for r in reports),'unique_test_pixel_pairs':len(unique),'test_pixel_pairs_also_in_training':len(unique&training_unique),'median_counter_ms':timings[len(timings)//2] if timings else None,'note':'Raw CURRENT candidates only, not production selection/confirmation/maxima/actions. Training separated from test coverage. Synthetic source differences may be intentional skew. Unlabeled archives have no accuracy verdict; repeated pixel pairs reported.'}
+    summary['mode']='template_then_ocr' if a.ocr_fallback else 'template_only'
+    if a.ocr_fallback:summary['hybrid_counts']=reader.counts
     summary['fully_labeled_test_passed']=summary['test_labeled_currents']>0 and summary['missing_candidates']==0 and summary['only_wrong_candidates']==0
     summary['production_changed']=False
     (a.output/'summary.json').write_text(json.dumps(summary,indent=2));print(json.dumps({k:v for k,v in summary.items() if k not in ('datasets','skipped')}));print('Report:',str((a.output/'summary.json').resolve()));return 0 if summary['fully_labeled_test_passed'] else 1
