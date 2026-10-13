@@ -1,0 +1,20 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>TeoBot OBS marker</title>
+<style>html,body{margin:0;padding:0;overflow:hidden;background:transparent}canvas{display:block}</style></head>
+<body><canvas id="marker" width="544" height="32"></canvas><script>
+// OBS Browser source: 544 x 32, custom frame rate 60. No external resources.
+const ctx=document.getElementById('marker').getContext('2d',{alpha:false});
+function crc16(bytes){let crc=0xffff;for(const b of bytes){crc^=b<<8;for(let i=0;i<8;i++)crc=((crc&0x8000)?(crc<<1)^0x1021:crc<<1)&0xffff;}return crc;}
+function draw(){
+ const t=Date.now()>>>0;
+ const bytes=[0x54,0xb7,(t>>>24)&255,(t>>>16)&255,(t>>>8)&255,t&255];
+ const crc=crc16(bytes);bytes.push(crc>>>8,crc&255);
+ ctx.fillStyle='#ff00ff';ctx.fillRect(0,0,544,32);
+ ctx.fillStyle='#101010';ctx.fillRect(4,4,536,24);
+ bytes.forEach((b,i)=>{for(let bit=0;bit<8;bit++){
+  ctx.fillStyle=((b>>>(7-bit))&1)?'#ffffff':'#000000';
+  ctx.fillRect(16+(i*8+bit)*8,8,8,16);
+ }});
+ requestAnimationFrame(draw);
+}draw();
+</script></body></html>

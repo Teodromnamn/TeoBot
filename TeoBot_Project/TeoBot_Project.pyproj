@@ -25,6 +25,7 @@
     <Compile Include="game\consts.py" />
     <Compile Include="game\input_sender.py" />
     <Compile Include="game\map_detector.py" />
+    <Compile Include="game\status_bar_detector.py" />
     <Compile Include="game\window_capture.py" />
     <Compile Include="logic\bot_engine.py" />
     <Compile Include="logic\cavebot.py" />
@@ -33,6 +34,7 @@
     <Compile Include="logic\potions.py" />
     <Compile Include="logic\support.py" />
     <Compile Include="main.py" />
+    <Compile Include="tools\test_status_bars.py" />
     <Compile Include="profiles\defaults.py" />
     <Compile Include="profiles\manager.py" />
     <Compile Include="ui\app.py" />
